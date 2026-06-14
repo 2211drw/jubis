@@ -180,7 +180,7 @@ const CHARS = {
     id: 'muchaga', name: 'Muchaga', role: '🏉 100% Responsable',
     desc: 'Ex jugador de rugby reconvertido en camarero. Sirve cafés, cañas y combinados sin parar. Algo en él ya no está del todo bien.',
     currency: 'Cañas', icon: '🍺', clickText: '¡SIRVE!', clickIcon: '🍺', btnText: '¡A tu servicio!',
-    theme: '#e8820a', themeD: '#b06000', themeG: 'rgba(232,130,10,0.25)',
+    theme: '#ffb86c', themeD: '#e89040', themeG: 'rgba(255,184,108,0.30)',
     special: 'whyshkeys',
     upgrades: [
       { id:'cafe',     name:'Café Solo',           icon:'☕', desc:'El del rincón lo pide de siempre.',                   cost:10,    prod:0.1,  cbonus:0,   base:10    },
@@ -198,7 +198,7 @@ const CHARS = {
     id: 'fita', name: 'Fita', role: '🌙 El Guerrero Nocturno',
     desc: 'Fita no duerme, Fita resiste. Su cuerpo es un templo... de vicios.',
     currency: 'Vicios', icon: '💨', clickText: '¡OTRO MÁS!', clickIcon: '🍺', btnText: '¡Ponme una!',
-    theme: '#9b42f0', themeD: '#6a18b8', themeG: 'rgba(155,66,240,0.25)',
+    theme: '#c084fc', themeD: '#9a50d8', themeG: 'rgba(192,132,252,0.30)',
     special: 'dobletazo',
     upgrades: [
       { id:'birra',  name:'Birra de Lata',       icon:'🍺', desc:'La base de toda buena noche.',                       cost:10,    prod:0.1,  cbonus:0,   base:10    },
@@ -216,7 +216,7 @@ const CHARS = {
     id: 'noah', name: 'Noah', role: '📱 El Scrolleador Profesional',
     desc: 'No lo llamaría adicción sino CONSTANCIA. Full focus en su TDAH.',
     currency: 'Likes', icon: '❤️', clickText: 'SCROLLEAR', clickIcon: '📱', btnText: '¡RETINAS AL FALLO!',
-    theme: '#1a9be8', themeD: '#0a70b8', themeG: 'rgba(26,155,232,0.25)',
+    theme: '#7dd3fc', themeD: '#4aa8d8', themeG: 'rgba(125,211,252,0.30)',
     special: 'noah',
     upgrades: [
       { id:'datos',     name:'Plan de Datos 5G',     icon:'📶', desc:'Sin wifi no hay vida. Es axiomático.',               cost:10,    prod:0.1,  cbonus:0,   base:10    },
@@ -234,7 +234,7 @@ const CHARS = {
     id: 'diego', name: 'Diego', role: '🏠 El Cabezapisos', photo: 'vilachu',
     desc: 'Habla sin parar. Sabe el precio del metro cuadrado en Salinas de memoria. Cerdo trufero de primera.',
     currency: 'Palabras', icon: '💬', clickText: '¡YAPEAR!', clickIcon: '🗣️', btnText: '¡A SOLTAR CHAPA!',
-    theme: '#e76f51', themeD: '#b5451e', themeG: 'rgba(231,111,81,0.25)',
+    theme: '#fca88e', themeD: '#d87860', themeG: 'rgba(252,168,142,0.30)',
     special: 'diego',
     upgrades: [
       { id:'movil_agente', name:'Móvil del Agente',    icon:'📱', desc:'Para llamar a la promotora a las 9 de la mañana.',         cost:10,     prod:0.1,  cbonus:0,   base:10     },
@@ -265,8 +265,8 @@ const CHARS = {
   weeman4k: {
     id: 'weeman4k', name: 'Weeman4k', role: '🎬 El Fotógrafo con Problemillas',
     desc: 'Talento sin límites. Agenda sin fondo. Coopers tampoco ayuda.',
-    currency: 'Tomas', icon: '🎬', clickText: '¡DISPARA!', clickIcon: '📸', btnText: '¡A GRABAR!',
-    theme: '#e0007a', themeD: '#a8005a', themeG: 'rgba(224,0,122,0.25)',
+    currency: 'Tomas', icon: '🎬', clickText: '¡DISPARA!', clickIcon: '📸', btnText: '¡SWELL EVENT!',
+    theme: '#f9a8d4', themeD: '#d878a8', themeG: 'rgba(249,168,212,0.30)',
     special: 'weeman4k',
     upgrades: [
       { id:'camara_foto',    name:'Cámara Réflex',      icon:'📷', desc:'F2.8, bokeh garantizado. Arte al cuello.',             cost:10,    prod:0.1,  cbonus:0,   base:10    },
@@ -303,7 +303,7 @@ const CHARS = {
     id: 'nanduko', name: 'Nanduko', role: '💊 El Empresario Independiente',
     desc: 'Cara de siempre estar a punto de cagarse de risa, alma de hombre de negocios. Su empresa de distribución alternativa no falla. La policía, tampoco.',
     currency: 'Pasta', icon: '💵', clickText: '¡TRATO HECHO!', clickIcon: '🤝', btnText: '¡A facturar!',
-    theme: '#2ecc71', themeD: '#18a050', themeG: 'rgba(46,204,113,0.22)',
+    theme: '#86efac', themeD: '#50c878', themeG: 'rgba(134,239,172,0.30)',
     special: 'nanduko',
     upgrades: [
       { id:'porro',    name:'Porros del Barrio',     icon:'🍃', desc:'El clásico. Lo pides, llega en 10 min.',             cost:10,    prod:0.1,  cbonus:0,   base:10    },
@@ -321,7 +321,7 @@ const CHARS = {
     id: 'extraperlo', name: 'MODO EXTRAPERLO', role: '🎪 Modo Caos Total',
     desc: '¿Por qué elegir uno cuando puedes tenerlos a todos? El modo Extraperlo mezcla todo. Con Roca Pintada suelta por ahí.',
     currency: 'Caos', icon: '🌀', clickText: '¡EXTRÁPERLALO!', clickIcon: '🎪', btnText: '¡PA DENTRO!',
-    theme: '#e63946', themeD: '#b01828', themeG: 'rgba(230,57,70,0.28)',
+    theme: '#fca5a5', themeD: '#d87070', themeG: 'rgba(252,165,165,0.30)',
     special: 'extraperlo',
     upgrades: [
       { id:'entrada',    name:'Tunelinos',             icon:'🎟️', desc:'La base de todo buen caos.',                        cost:15,    prod:0.2,  cbonus:0,   base:15    },
@@ -830,7 +830,7 @@ function goBack() {
   document.getElementById('game-screen').classList.add('hidden');
   document.getElementById('selection-screen').classList.remove('hidden');
   renderSelection();
-  setTheme({ theme:'#ffd93d', themeD:'#e6b800', themeG:'rgba(255,217,61,0.2)' });
+  setTheme({ theme:'#ffe899', themeD:'#e8c840', themeG:'rgba(255,232,153,0.28)' });
 }
 
 function setTheme(ch) {
