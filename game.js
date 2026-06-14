@@ -1996,6 +1996,16 @@ function _failInterruptor() {
   toast('💀 ¡TE HAN CALLADO! Bufos y Yapping perdidos.', '💀', 'toast-bad');
 }
 
+const INTERRUPTOR_FRASES = [
+  '¡POR ESO! ¡Si me dejas acabar...!',
+  '¡Ahí quería llegar yo! ¡POR ESO!',
+  '¡Que no he terminado! ¡POR ESO!',
+  '¡Exacto! ¡ESO iba a decir yo!',
+  '¡Oye! ¡Déjame acabar la frase!',
+  '¡POR ESO te lo estaba explicando!',
+  '¡Eso mismo! ¡Por eso lo decía!',
+];
+
 function triggerInterruptor() {
   S.interrumpidorActive = true;
   S.interrumpidorStartMs = Date.now();
@@ -2008,6 +2018,7 @@ function triggerInterruptor() {
   };
   renderSpecial();
   toast('💬 ¡ALGUIEN TE INTERRUMPE! Para el cursor en la zona correcta', '💬');
+  showMsg(INTERRUPTOR_FRASES[Math.floor(Math.random() * INTERRUPTOR_FRASES.length)]);
   clearTimeout(S.interrumpidorTimer);
   S.interrumpidorTimer = setTimeout(() => {
     if (S.interrumpidorActive) _failInterruptor();
@@ -3309,10 +3320,27 @@ function renderAchievements() {
       <div class="ach-icon">${unlocked ? a.icon : '🔒'}</div>
       <div class="ach-info">
         <div class="ach-name ${unlocked ? '' : 'locked-name'}">${unlocked ? a.name : '???'}</div>
-        <div class="ach-desc">${unlocked ? a.desc : 'Sigue jugando para desbloquear este logro.'}</div>
+        <div class="ach-desc">${unlocked ? a.desc : 'Mantén pulsado para ver cómo conseguirlo.'}</div>
       </div>
       <div class="ach-check">${unlocked ? '✅' : ''}</div>
     `;
+    if (!unlocked) {
+      let holdTimer = null;
+      const descEl = item.querySelector('.ach-desc');
+      item.addEventListener('pointerdown', () => {
+        holdTimer = setTimeout(() => {
+          descEl.textContent = a.desc;
+          descEl.style.color = 'var(--gold)';
+        }, 600);
+      });
+      const reset = () => {
+        clearTimeout(holdTimer);
+        descEl.textContent = 'Mantén pulsado para ver cómo conseguirlo.';
+        descEl.style.color = '';
+      };
+      item.addEventListener('pointerup', reset);
+      item.addEventListener('pointerleave', reset);
+    }
     list.appendChild(item);
   });
   const total   = achs.length;
