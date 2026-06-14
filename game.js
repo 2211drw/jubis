@@ -1515,12 +1515,13 @@ function startHold(type) {
     if (holdType === 'ola') {
       const surfFill = document.querySelector('.surf-fill');
       if (surfFill) surfFill.style.width = holdProgress + '%';
-      // Reveal direction at 75%
-      if (holdProgress >= 75 && !S.olaRevealed) {
+      // Reveal direction at 60%
+      if (holdProgress >= 60 && !S.olaRevealed) {
         S.olaRevealed = true;
+        renderSpecial();
         const txt = document.querySelector('.ola-reveal-txt');
         if (txt) {
-          txt.textContent = S.olaDir === 'derecha' ? '→ ¡ES UNA DERECHA! ¡DALE DALE!' : '← ¡ES UNA IZQUIERDA!';
+          txt.textContent = S.olaDir === 'derecha' ? '¡ES UNA DERECHA! ¡DALE DALE!' : '¡ES UNA IZQUIERDA!';
           txt.style.color = S.olaDir === 'derecha' ? '#44ff88' : '#ff3300';
           txt.style.fontWeight = '900';
           txt.style.fontSize = '1rem';
@@ -2105,16 +2106,21 @@ function buildDiego(ch) {
   if (S.olaActive) {
     const isHolding = holdType === 'ola';
     const revealed  = S.olaRevealed;
+    const _olaArrow = revealed ? (S.olaDir === 'derecha' ? '➡️' : '⬅️') : '';
     html += `<div class="ola-event${revealed ? (S.olaDir === 'derecha' ? ' ola-derecha' : ' ola-izquierda') : ' ola-misterio'}">
       <div class="ola-dir ola-reveal-txt">${revealed
-        ? (S.olaDir === 'derecha' ? '→ ¡ES UNA DERECHA! ¡DALE DALE!' : '← ¡ES UNA IZQUIERDA!')
+        ? (S.olaDir === 'derecha' ? '¡ES UNA DERECHA! ¡DALE DALE!' : '¡ES UNA IZQUIERDA!')
         : '🌊 ¿Derecha o izquierda? Aguanta para ver...'}</div>
       <div class="surf-track"><div class="surf-fill" style="width:${isHolding ? holdProgress : 0}%"></div></div>
-      <div class="nose-wrap"
-        onmousedown="startHold('ola')"
-        ontouchstart="event.preventDefault();startHold('ola')">
-        <span class="nose-btn${isHolding ? ' nose-active' : ''}">🌊</span>
-        <span class="hold-hint">${isHolding ? '¡Aguanta!' : 'Mantén pulsado para surfear'}</span>
+      <div class="ola-btn-row">
+        <span class="ola-side-arrow">${_olaArrow}</span>
+        <div class="nose-wrap"
+          onmousedown="startHold('ola')"
+          ontouchstart="event.preventDefault();startHold('ola')">
+          <span class="nose-btn${isHolding ? ' nose-active' : ''}">🌊</span>
+          <span class="hold-hint">${(revealed && S.olaDir === 'izquierda') ? (isHolding ? '¡SUELTA! ¡Para!' : '¡Para! No la cojas') : (isHolding ? '¡Aguanta!' : 'Mantén pulsado para surfear')}</span>
+        </div>
+        <span class="ola-side-arrow">${_olaArrow}</span>
       </div>
     </div>`;
   }
@@ -3167,16 +3173,21 @@ function buildXP(ch) {
   if (S.olaActive) {
     const isHolding = holdType === 'ola';
     const revealed  = S.olaRevealed;
+    const _olaArrow = revealed ? (S.olaDir === 'derecha' ? '➡️' : '⬅️') : '';
     html += `<div class="ola-event${revealed ? (S.olaDir === 'derecha' ? ' ola-derecha' : ' ola-izquierda') : ' ola-misterio'}">
       <div class="ola-dir ola-reveal-txt">${revealed
-        ? (S.olaDir === 'derecha' ? '→ ¡ES UNA DERECHA! ¡DALE DALE!' : '← ¡ES UNA IZQUIERDA!')
+        ? (S.olaDir === 'derecha' ? '¡ES UNA DERECHA! ¡DALE DALE!' : '¡ES UNA IZQUIERDA!')
         : '🌊 ¿Derecha o izquierda? Aguanta para ver...'}</div>
       <div class="surf-track"><div class="surf-fill" style="width:${isHolding ? holdProgress : 0}%"></div></div>
-      <div class="nose-wrap"
-        onmousedown="startHold('ola')"
-        ontouchstart="event.preventDefault();startHold('ola')">
-        <span class="nose-btn${isHolding ? ' nose-active' : ''}">🌊</span>
-        <span class="hold-hint">${isHolding ? '¡Aguanta!' : 'Mantén pulsado para surfear'}</span>
+      <div class="ola-btn-row">
+        <span class="ola-side-arrow">${_olaArrow}</span>
+        <div class="nose-wrap"
+          onmousedown="startHold('ola')"
+          ontouchstart="event.preventDefault();startHold('ola')">
+          <span class="nose-btn${isHolding ? ' nose-active' : ''}">🌊</span>
+          <span class="hold-hint">${(revealed && S.olaDir === 'izquierda') ? (isHolding ? '¡SUELTA! ¡Para!' : '¡Para! No la cojas') : (isHolding ? '¡Aguanta!' : 'Mantén pulsado para surfear')}</span>
+        </div>
+        <span class="ola-side-arrow">${_olaArrow}</span>
       </div>
     </div>`;
   }
