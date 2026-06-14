@@ -522,7 +522,7 @@ let S = {
   // Extraperlo
   rocaActive: false, rocaTimer: null, rocaNeed: 0, rocaDone: 0,
   vasosActive: false, vasosTimer: null, vasosNeed: 0, vasosDone: 0, vasosFrase: '',
-  setasActive: false, setasTimer: null, setasDone: 0, setasBuffEnd: 0, setasDebuffEnd: 0,
+  setasActive: false, setasTimer: null, setasInterval: null, setasDone: 0, setasBuffEnd: 0, setasDebuffEnd: 0,
   corteLuzActive: false, corteLuzTimer: null, corteLuzBuffEnd: 0, corteLuzDebuffEnd: 0,
   // Shared tracking for achievements
   achData: {
@@ -567,9 +567,9 @@ function tryUnlockAll() {
   if (input.value === 'FITADINAMITA') {
     localStorage.setItem('penona_unlock_all', '1');
     renderSelection();
-    toast('¡TODO DESBLOQUEADO! Caos absoluto habilitado.', '🔓');
+    toast('¡TODO DESBLOQUEADO! Caos absoluto habilitado.', '🔓', 'toast-good');
   } else {
-    toast('Contraseña incorrecta.', '❌');
+    toast('Contraseña incorrecta.', '❌', 'toast-bad');
     input.value = '';
   }
 }
@@ -584,9 +584,120 @@ function resetAll() {
   toast('Reset completo. Todo borrado.', '🗑️');
 }
 
+const _floaterState = { menu: { raf: null, particles: [] }, game: { raf: null, particles: [] } };
+
+// sources: array of strings — "assets/foo.png" for images, or emoji char for text
+function runFloaters(key, containerEl, cssClass, count, minSize, maxSize, sources, isAlive) {
+  const state = _floaterState[key];
+  if (state.raf) { cancelAnimationFrame(state.raf); state.raf = null; }
+  containerEl.querySelectorAll('.' + cssClass).forEach(el => el.remove());
+  state.particles = [];
+
+  const W = window.innerWidth;
+  const H = window.innerHeight;
+
+  for (let i = 0; i < count; i++) {
+    const size = minSize + Math.random() * (maxSize - minSize);
+    const r    = size / 2;
+    const src  = sources[Math.floor(Math.random() * sources.length)];
+    let el;
+    if (src.startsWith('assets/')) {
+      el = document.createElement('img');
+      el.src = src;
+      el.style.width = size + 'px';
+    } else {
+      el = document.createElement('div');
+      el.textContent  = src;
+      el.style.cssText = `width:${size}px;height:${size}px;font-size:${(size * 0.72).toFixed(0)}px;display:flex;align-items:center;justify-content:center;line-height:1;`;
+    }
+    el.className = cssClass;
+    el.style.opacity = (0.06 + Math.random() * 0.09).toFixed(3);
+    containerEl.appendChild(el);
+
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 0.22 + Math.random() * 0.42;
+    state.particles.push({
+      el, r,
+      x: r + Math.random() * Math.max(W - size, 1),
+      y: r + Math.random() * Math.max(H - size, 1),
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+    });
+  }
+
+  function tick() {
+    if (!isAlive()) return;
+    const W2 = window.innerWidth;
+    const H2 = window.innerHeight;
+    const pts = state.particles;
+
+    for (const p of pts) {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x - p.r < 0)   { p.x = p.r;      p.vx =  Math.abs(p.vx); }
+      if (p.x + p.r > W2)  { p.x = W2 - p.r; p.vx = -Math.abs(p.vx); }
+      if (p.y - p.r < 0)   { p.y = p.r;      p.vy =  Math.abs(p.vy); }
+      if (p.y + p.r > H2)  { p.y = H2 - p.r; p.vy = -Math.abs(p.vy); }
+    }
+
+    for (let i = 0; i < pts.length; i++) {
+      for (let j = i + 1; j < pts.length; j++) {
+        const a = pts[i], b = pts[j];
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const min  = a.r + b.r;
+        if (dist < min && dist > 0) {
+          const nx = dx / dist, ny = dy / dist;
+          const ov = (min - dist) / 2;
+          a.x -= nx * ov; a.y -= ny * ov;
+          b.x += nx * ov; b.y += ny * ov;
+          const dot = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;
+          if (dot > 0) {
+            a.vx -= dot * nx; a.vy -= dot * ny;
+            b.vx += dot * nx; b.vy += dot * ny;
+          }
+        }
+      }
+    }
+
+    for (const p of pts) {
+      p.el.style.left = (p.x - p.r) + 'px';
+      p.el.style.top  = (p.y - p.r) + 'px';
+    }
+
+    state.raf = requestAnimationFrame(tick);
+  }
+
+  setTimeout(() => { state.raf = requestAnimationFrame(tick); }, 60);
+}
+
+const FLOATER_PHOTOS = ['muchaga','noah','fita','weeman4k','nanduko','vilachu'].map(p => `assets/${p}.png`);
+
+function startMenuFloaters() {
+  const screen = document.getElementById('selection-screen');
+  runFloaters(
+    'menu', screen, 'menu-floater', 50, 30, 65, FLOATER_PHOTOS,
+    () => !document.getElementById('selection-screen').classList.contains('hidden')
+  );
+}
+
+function startGameFloaters(pid) {
+  const container = document.getElementById('game-floaters-container');
+  if (!container) return;
+  const ch = CHARS[pid];
+  if (!ch) return;
+  const sources = pid === 'extraperlo'
+    ? FLOATER_PHOTOS
+    : [`assets/${ch.photo || pid}.png`, ch.icon];
+  runFloaters(
+    'game', container, 'game-floater', 50, 30, 65, sources,
+    () => !document.getElementById('game-screen').classList.contains('hidden')
+  );
+}
+
 function renderSelection() {
   const grid = document.getElementById('characters-grid');
   grid.innerHTML = '';
+  startMenuFloaters();
 
   UNLOCK_ORDER.forEach(pid => {
     const ch       = CHARS[pid];
@@ -732,7 +843,7 @@ function startGame(pid) {
     cooperLootBuffEnd: 0, cooperJamonBuffEnd: 0, papaBuffEnd: 0, cagadaDebuffEnd: 0,
     rocaActive: false, rocaTimer: null, rocaNeed: 0, rocaDone: 0,
     vasosActive: false, vasosTimer: null, vasosNeed: 0, vasosDone: 0, vasosFrase: '',
-    setasActive: false, setasTimer: null, setasDone: 0, setasBuffEnd: 0, setasDebuffEnd: 0,
+    setasActive: false, setasTimer: null, setasInterval: null, setasDone: 0, setasBuffEnd: 0, setasDebuffEnd: 0,
     corteLuzActive: false, corteLuzTimer: null, corteLuzBuffEnd: 0, corteLuzDebuffEnd: 0,
     achData: useSave && save.achData ? { raicesEscapes:0, raicesCaptures:0, cooperInteractions:0, cagadasEvitadas:0, cagadasRecogidas:0, looteos:0, jamones:0, perfectHits:0, perfectPoints:0, ultraActivations:0, papaRabiosoHits:0, ...save.achData } : {
       wskActivations:0, wskWins:0, dobletazos:0, chupaWins:0,
@@ -770,6 +881,8 @@ function startGame(pid) {
       <div id="game-svg-fb" style="display:none;width:100%;height:100%;align-items:center;justify-content:center">${AVATARS[pid]}</div>
     `;
   }
+  startGameFloaters(pid);
+
   _lastStageIdx = -1; // force btn re-render
   document.getElementById('main-btn-icon').textContent = ch.clickIcon;
   document.getElementById('main-btn-text').textContent = ch.clickText;
@@ -827,6 +940,7 @@ function goBack() {
   document.getElementById('coopers-slot').style.display = 'none';
   clearInterval(holdInterval); holdInterval = null; holdProgress = 0; holdType = null;
   S.pid = null;
+  if (_floaterState.game.raf) { cancelAnimationFrame(_floaterState.game.raf); _floaterState.game.raf = null; }
   document.getElementById('game-screen').classList.add('hidden');
   document.getElementById('selection-screen').classList.remove('hidden');
   renderSelection();
@@ -854,7 +968,7 @@ function tick() {
     if (S.tripleActive && now < S.tripleEnd) {
       S.energy = Math.min(100, S.energy + 0.2); // triplete: barra sube sola
     } else {
-      if (S.tripleActive) { S.tripleActive = false; renderSpecial(); toast('El TRIPLETE se acabó. Inevitable caída.','💀'); }
+      if (S.tripleActive) { S.tripleActive = false; renderSpecial(); toast('El TRIPLETE se acabó. Inevitable caída.','💀', 'toast-bad'); }
       const drain = S.yeyoActive && now < S.debuffEnd ? 0.55 : 0.22; // debuff drains faster
       S.energy = Math.max(0, S.energy - drain);
     }
@@ -1091,10 +1205,10 @@ function buyUpgrade(id) {
   const u  = ch.upgrades.find(x => x.id === id);
   if (!u) return;
   const cost = upgradeCost(u);
-  if (S.currency < cost) { toast(`Sin pasta. Faltan ${fmt(cost - S.currency)} ${ch.icon}`, '❌'); return; }
+  if (S.currency < cost) { toast(`Sin pasta. Faltan ${fmt(cost - S.currency)} ${ch.icon}`, '❌', 'toast-bad'); return; }
   S.currency -= cost;
   S.upgrades[id]++;
-  toast(`${u.icon} ${u.name} x${S.upgrades[id]}`, '✅');
+  toast(`${u.icon} ${u.name} x${S.upgrades[id]}`, '✅', 'toast-good');
   renderUpgrades();
   updateDisplays();
 }
@@ -1258,7 +1372,7 @@ function triggerPizza() {
     if (S.pizzaActive) {
       S.pizzaActive = false;
       renderSpecial();
-      toast('Las pizzas se han enfriado. Oportunidad perdida.', '🥶');
+      toast('Las pizzas se han enfriado. Oportunidad perdida.', '🥶', 'toast-bad');
       showMsg('Nadie recogió las pizzas. Se quedan ahí, insultando.');
     }
   }, 15000);
@@ -1272,7 +1386,7 @@ function clickPizza(i) {
     S.pizzaActive = false;
     S.furiaLevel  = 100;
     renderSpecial();
-    toast('🍕🍕🍕 ¡PEDIDO COMPLETADO! ¡FURIA AL MÁXIMO!', '🔥');
+    toast('🍕🍕🍕 ¡PEDIDO COMPLETADO! ¡FURIA AL MÁXIMO!', '🔥', 'toast-good');
     showMsg('¡Tres pizzas cogidas! La furia de Muchaga se dispara al límite. ×5 activado.');
     updateDisplays();
   } else {
@@ -1288,7 +1402,7 @@ function clickWiskey() {
   S.furiaLevel  = Math.min(100, S.furiaLevel + 50);
   S.achData.wskActivations = (S.achData.wskActivations || 0) + 1;
   renderSpecial();
-  toast('🥃 ¡WHISKY POR LA MAÑANA! ×5 + furia +50%', '🥃');
+  toast('🥃 ¡WHISKY POR LA MAÑANA! ×5 + furia +50%', '🥃', 'toast-good');
   showMsg('Un whisky a las 9 de la mañana. La producción se dispara y la furia también. Cuidado.');
 }
 
@@ -1305,7 +1419,7 @@ function triggerGresca() {
       S.grescaActive = false;
       S.currency = 0;
       renderSpecial();
-      toast('¡Los abuelos han destrozado la caja!💸 Dinero a 0.', '😱');
+      toast('¡Los abuelos han destrozado la caja!💸 Dinero a 0.', '😱', 'toast-bad');
       showMsg('Los abuelos han arrasado con todo. Hasta el cajón está abierto y vacío.');
       updateDisplays();
     }
@@ -1323,7 +1437,7 @@ function clickGresca() {
     earn(reward);
     S.achData.fightWins = (S.achData.fightWins || 0) + 1;
     renderSpecial();
-    toast(`👴 ¡Abuelos separados! +${fmt(reward)} ${ch.icon}`, '✅');
+    toast(`👴 ¡Abuelos separados! +${fmt(reward)} ${ch.icon}`, '✅', 'toast-good');
     showMsg('Los abuelos están en sillas distintas. Te dan las gracias y sacan el monedero.');
     updateDisplays();
   } else {
@@ -1362,7 +1476,7 @@ function clickFight(key) {
     const b = Math.max(80, Math.floor(S.currency * 0.3));
     S.currency += b; S.totalCurrency += b; S.achData.fightWins++;
     S.fightActive = false; S.fightPunch = null;
-    renderSpecial(); toast(`¡ESQUIVADO! +${fmt(b)} cañas 🥊`, '🎯');
+    renderSpecial(); toast(`¡ESQUIVADO! +${fmt(b)} cañas 🥊`, '🎯', 'toast-good');
     showMsg('¡Muchaga esquiva como un bailarín borracho! ¡El bar enloquece!');
     updateDisplays();
   } else {
@@ -1445,7 +1559,7 @@ function stopHold(success) {
     holdProgress = 0; holdType = null;
     if (t === 'ola') {
       S.olaRevealed = false;
-      toast('🌊 Ola perdida. No aguantaste hasta el final.', '🌊');
+      toast('🌊 Ola perdida. No aguantaste hasta el final.', '🌊', 'toast-bad');
     } else if (holdProgress > 5) {
       showMsg('Has soltado. Casi... inténtalo otra vez.');
     }
@@ -1572,7 +1686,7 @@ function triggerChica() {
   S.chicaTimer = setTimeout(() => {
     if (S.chicaActive) {
       S.chicaActive = false; renderSpecial();
-      toast('La chica se fue... estabas mirando el móvil.', '💔');
+      toast('La chica se fue... estabas mirando el móvil.', '💔', 'toast-bad');
       showMsg('Mirando el móvil mientras la chica se alejaba. Clásico Noah.');
     }
   }, 6000);
@@ -1590,7 +1704,7 @@ function clickChica() {
     showMsg('¡Le ha dado el Instagram! Bueno, el número no. El Instagram.');
   } else {
     S.achData.chicaFails++;
-    toast('Rechazo. Ha dicho que "¿no tenías novia?". No tienes.', '😬');
+    toast('Rechazo. Ha dicho que "¿no tenías novia?". No tienes.', '😬', 'toast-bad');
     showMsg('La próxima vez guarda el teléfono cuando hablas con alguien, Noah.');
   }
   renderSpecial(); updateDisplays();
@@ -1792,7 +1906,7 @@ function triggerIdealista() {
     if (S.idealistaActive) {
       S.idealistaActive = false; S.idealistaPiso = null; S.salinasConteo = 0;
       renderSpecial();
-      toast('🏠 Se fue el piso. Lo pillaron antes.', '😤');
+      toast('🏠 Se fue el piso. Lo pillaron antes.', '😤', 'toast-bad');
     }
   }, piso.sec * 1000);
   renderSpecial();
@@ -1822,7 +1936,7 @@ function clickIdealista() {
     S.chapaSilencioActive = true;
     S.chapaSilencioEnd = Date.now() + 4000;
     renderSpecial();
-    toast('🤢 ¡¡VILLA CLOACA!! Yapping a 0. ×0.3 durante 20s de vergüenza ajena', '🤢');
+    toast('🤢 ¡¡VILLA CLOACA!! Yapping a 0. ×0.3 durante 20s de vergüenza ajena', '🤢', 'toast-bad');
   } else {
     S.idealistaBuffEnd = Date.now() + piso.sec * 1000;
     S.idealistaBuffMult = piso.mult;
@@ -1860,11 +1974,11 @@ function resolveOla() {
   if (dir === 'derecha') {
     S.achData.olasDerechas = (S.achData.olasDerechas || 0) + 1;
     S.olaBuffEnd = Date.now() + 15000;
-    toast('🌊 ¡DERECHA PERFECTA! ×2 durante 15s — cerdo trufero puro', '🌊');
+    toast('🌊 ¡DERECHA PERFECTA! ×2 durante 15s — cerdo trufero puro', '🌊', 'toast-good');
   } else {
     S.achData.olasIzquierdas = (S.achData.olasIzquierdas || 0) + 1;
     S.olaDebuffEnd = Date.now() + 20000;
-    toast('😤 ¡¡ERA UNA IZQUIERDA!! Diego de mal humor. ×0.5 durante 20s', '😤');
+    toast('😤 ¡¡ERA UNA IZQUIERDA!! Diego de mal humor. ×0.5 durante 20s', '😤', 'toast-bad');
   }
   updateDisplays();
 }
@@ -1876,7 +1990,7 @@ function _failInterruptor() {
   S.callarBuffEnd = 0; S.idealistaBuffEnd = 0; S.avilesDebuffEnd = 0;
   S.chapaSilencioActive = true; S.chapaSilencioEnd = Date.now() + 5000;
   renderSpecial(); updateDisplays();
-  toast('💀 ¡TE HAN CALLADO! Bufos y Yapping perdidos.', '💀');
+  toast('💀 ¡TE HAN CALLADO! Bufos y Yapping perdidos.', '💀', 'toast-bad');
 }
 
 function triggerInterruptor() {
@@ -1912,7 +2026,7 @@ function clickInterruptor() {
     S.achData.interrupciones = (S.achData.interrupciones || 0) + 1;
     S.callarBuffEnd = Date.now() + 10000;
     renderSpecial();
-    toast('🤫 ¡ZONA PERFECTA! Callado con clase. ×4 durante 10s', '🤫');
+    toast('🤫 ¡ZONA PERFECTA! Callado con clase. ×4 durante 10s', '🤫', 'toast-good');
   } else if (pos >= L.os && pos <= L.oe) {
     S.interrumpidorActive = false;
     S.yappingEnd = (S.yappingEnd || Date.now()) + 10000;
@@ -2059,7 +2173,7 @@ function triggerBanyo() {
       S.banyoNeed = null;
       const fine = Math.max(80, Math.floor(S.currency * 0.3));
       S.currency = Math.max(0, S.currency - fine);
-      renderSpecial(); toast(`⏰ ¡Plantón! El cliente se largó. -${fmt(fine)} 💵`, '😤');
+      renderSpecial(); toast(`⏰ ¡Plantón! El cliente se largó. -${fmt(fine)} 💵`, '😤', 'toast-bad');
       showMsg('El cliente esperó y esperó. Ha perdido la confianza en tu empresa.');
       updateDisplays();
     }
@@ -2074,7 +2188,7 @@ function resolveBanyo() {
   S.currency += b; S.totalCurrency += b;
   S.achData.banyoWins++;
   S.banyoBuffEnd = Date.now() + 10000;
-  renderSpecial(); toast(`💼 ¡Trato cerrado! +${fmt(b)} 💵 ×4 durante 10s`, '🤝');
+  renderSpecial(); toast(`💼 ¡Trato cerrado! +${fmt(b)} 💵 ×4 durante 10s`, '🤝', 'toast-good');
   showMsg('Reunión productiva. Breve. Discreta. El cliente sale contento y tú también. ×4 activado.');
   updateDisplays();
 }
@@ -2089,7 +2203,7 @@ function clickBanyoDrug(drugId) {
     S.banyoNeed = null;
     const fine = Math.max(50, Math.floor(S.currency * 0.2));
     S.currency = Math.max(0, S.currency - fine);
-    renderSpecial(); toast(`❌ ¡Droga equivocada! El cliente se pira. -${fmt(fine)} 💵`, '😬');
+    renderSpecial(); toast(`❌ ¡Droga equivocada! El cliente se pira. -${fmt(fine)} 💵`, '😬', 'toast-bad');
     showMsg('Le diste lo que no quería. Negocio roto. Reputación por los suelos.');
     updateDisplays();
   }
@@ -2117,7 +2231,7 @@ function triggerRaices() {
       S.achData.raicesCaptures = (S.achData.raicesCaptures || 0) + 1;
       S.currency = 0;
       renderSpecial();
-      toast('Te quedaste parado. ¡Pillado y desplumado!', '🚔');
+      toast('Te quedaste parado. ¡Pillado y desplumado!', '🚔', 'toast-bad');
       showMsg('No elegiste y la guardia te encontró. Pasta confiscada. Distribución cortada 15 segundos.');
       updateDisplays();
     }
@@ -2134,7 +2248,7 @@ function clickRaices(routeId) {
     earn(reward);
     S.achData.raicesEscapes = (S.achData.raicesEscapes || 0) + 1;
     renderSpecial();
-    toast(`${route.icon} ¡${route.name} despejado! +${reward} pasta 💸`, '✅');
+    toast(`${route.icon} ¡${route.name} despejado! +${reward} pasta 💸`, '✅', 'toast-good');
     showMsg(`${route.name} estaba libre. Conoces el terreno mejor que ellos.`);
     updateDisplays();
   } else {
@@ -2142,7 +2256,7 @@ function clickRaices(routeId) {
     S.achData.raicesCaptures = (S.achData.raicesCaptures || 0) + 1;
     S.currency = 0;
     renderSpecial();
-    toast(`🚔 Control en ${route.icon} ${route.name}. ¡Pasta confiscada!`, '😬');
+    toast(`🚔 Control en ${route.icon} ${route.name}. ¡Pasta confiscada!`, '😬', 'toast-bad');
     showMsg(`${route.name} tenía control esta noche. Te han vaciado los bolsillos. 15 segundos fuera de juego.`);
     updateDisplays();
   }
@@ -2283,48 +2397,47 @@ function clickRoca() {
 function triggerSetas() {
   S.setasActive = true;
   S.setasDone = 0;
-  renderSpecial();
-  toast('🍄 ¡BATIDIÑO DE SETAS! Para en la zona verde.', '🍄');
-  showMsg('Un tío con los ojos como platos quiere su batidiño especial. Bate y para en la zona verde. Si te pasas, la lías.');
-  clearTimeout(S.setasTimer);
-  S.setasTimer = setTimeout(() => {
-    if (S.setasActive) {
+  clearInterval(S.setasInterval);
+  S.setasInterval = setInterval(() => {
+    if (!S.setasActive) { clearInterval(S.setasInterval); return; }
+    S.setasDone = Math.min(100, S.setasDone + 1.5);
+    renderSpecial();
+    if (S.setasDone >= 85) {
+      clearInterval(S.setasInterval);
       S.setasActive = false;
+      S.setasDebuffEnd = Date.now() + 8000;
+      S.achData.setasSobredosis = (S.achData.setasSobredosis || 0) + 1;
       renderSpecial();
-      toast('⏰ Batidiño sin terminar. El cliente se fue a otra barra.', '😑');
+      toast('🤯 ¡SOBREDOSIS DE SETAS! Producción a 0 por 8 segundos.', '💀', 'toast-bad');
+      showMsg('La barra se pasó. Sobredosis masiva. El festival lo nota. ×0 durante 8s.');
       updateDisplays();
     }
-  }, 10000);
-}
-
-function clickSetasBatir() {
-  if (!S.setasActive) return;
-  S.setasDone = Math.min(100, S.setasDone + 10);
-  if (S.setasDone >= 90) {
-    clearTimeout(S.setasTimer);
-    S.setasActive = false;
-    S.setasDebuffEnd = Date.now() + 8000;
-    S.achData.setasSobredosis = (S.achData.setasSobredosis || 0) + 1;
-    renderSpecial();
-    toast('🤯 ¡SOBREDOSIS DE SETAS! Todo parado 8 segundos.', '💀');
-    showMsg('Te pasaste. Mucho. El festival entero lo nota. Producción a 0 durante 8s.');
-    updateDisplays();
-  } else {
-    renderSpecial();
-  }
-}
-
-function clickSetasServir() {
-  if (!S.setasActive || S.setasDone < 50) return;
-  clearTimeout(S.setasTimer);
-  S.setasActive = false;
-  S.achData.setasServidas = (S.achData.setasServidas || 0) + 1;
-  const bonus = Math.max(200, Math.floor(S.currency * 0.35));
-  earn(bonus);
-  S.setasBuffEnd = Date.now() + 12000;
+  }, 80);
   renderSpecial();
-  toast(`🍄 ¡Batidiño perfecto! +${fmt(bonus)} Caos ×2 durante 12s`, '🌟');
-  showMsg('El tío está encantado. Todo el festival quiere uno. ×2 activo 12s.');
+  toast('🍄 ¡BATIDIÑO DE SETAS! ¡Para la barra en la zona verde!', '🍄');
+  showMsg('La barra sube sola. ¡Pulsa PARAR cuando esté en verde! Si se pasa... sobredosis.');
+}
+
+function clickSetasParar() {
+  if (!S.setasActive) return;
+  clearInterval(S.setasInterval);
+  S.setasActive = false;
+  const pct = S.setasDone;
+  if (pct >= 50 && pct < 85) {
+    S.achData.setasServidas = (S.achData.setasServidas || 0) + 1;
+    const bonus = Math.max(200, Math.floor(S.currency * 0.35));
+    earn(bonus);
+    S.setasBuffEnd = Date.now() + 12000;
+    renderSpecial();
+    toast(`🍄 ¡Batidiño perfecto! +${fmt(bonus)} Caos ×2 durante 12s`, '🌟', 'toast-good');
+    showMsg('El tío está encantado. Todo el festival quiere uno. ×2 activo 12s.');
+  } else if (pct < 50) {
+    const fine = Math.max(50, Math.floor(S.currency * 0.15));
+    S.currency = Math.max(0, S.currency - fine);
+    renderSpecial();
+    toast(`❌ ¡Demasiado pronto! Batido a medias. -${fmt(fine)} Caos`, '😬', 'toast-bad');
+    showMsg('No había batido lo suficiente. El cliente lo escupe.');
+  }
   updateDisplays();
 }
 
@@ -2338,7 +2451,7 @@ function triggerCorteLuz() {
       S.corteLuzActive = false;
       S.corteLuzDebuffEnd = Date.now() + 8000;
       renderSpecial();
-      toast('💀 Sin luz. Producción a 0 durante 8s. Roca Pintada aplaude.', '🌑');
+      toast('💀 Sin luz. Producción a 0 durante 8s. Roca Pintada aplaude.', '🌑', 'toast-bad');
     }
   }, 5000);
 }
@@ -2350,7 +2463,7 @@ function clickRestaurarLuz() {
   S.achData.cortesRestaurados = (S.achData.cortesRestaurados || 0) + 1;
   S.corteLuzBuffEnd = Date.now() + 12000;
   renderSpecial();
-  toast('💡 ¡LUZ RESTAURADA! ×2 durante 12s — el técnico llora de alegría', '💡');
+  toast('💡 ¡LUZ RESTAURADA! ×2 durante 12s — el técnico llora de alegría', '💡', 'toast-good');
 }
 
 // ================================================================
@@ -2497,7 +2610,7 @@ function clickCoopers() {
       S.coopersEvent = null;
       S.achData.looteos = (S.achData.looteos || 0) + 1;
       S.cooperLootBuffEnd = Date.now() + 8000;
-      toast('🍕 ¡LOOTEO COMPLETO! ×2 durante 8s', '🍕');
+      toast('🍕 ¡LOOTEO COMPLETO! ×2 durante 8s', '🍕', 'toast-good');
       renderCoopersEventMini(); updateDisplays();
     } else { renderCoopersEventMini(); }
   } else if (S.coopersEvent === 'jamon') {
@@ -2543,7 +2656,7 @@ function triggerPapaRabioso(motivo) {
   S.papaClicks  = 0;
   S.papaNeed    = 10;
   renderSpecial();
-  toast(`😤 PAPÁ RABIOSO — ${LUCIA_RANTS[Math.floor(Math.random() * LUCIA_RANTS.length)]}`, '😤');
+  toast(`😤 PAPÁ RABIOSO — ${LUCIA_RANTS[Math.floor(Math.random() * LUCIA_RANTS.length)]}`, '😤', 'toast-bad');
   showMsg(motivo || 'El hate es energía. Hay que soltarlo.');
   clearTimeout(S.papaTimer);
   S.papaTimer = setTimeout(() => {
@@ -2563,7 +2676,7 @@ function clickPapa() {
     clearTimeout(S.papaTimer);
     S.papaRabioso = false;
     S.papaBuffEnd = Date.now() + 8000;
-    toast('😤✅ ¡HATE SOLTADO! ×3 durante 8s. Lucia lo notará.', '😤');
+    toast('😤✅ ¡HATE SOLTADO! ×3 durante 8s. Lucia lo notará.', '😤', 'toast-good');
     showMsg('El hate es energía. Daigo lo sabe mejor que nadie.');
     renderSpecial(); updateDisplays();
   } else { renderSpecial(); }
@@ -2582,7 +2695,7 @@ function triggerMolinillo() {
       S.ultraActive     = false;
       S.ultraEnd        = 0;
       renderSpecial();
-      toast('🌀❌ Molinillo fallado. ULTRAPERFECT cancelado.', '💀');
+      toast('🌀❌ Molinillo fallado. ULTRAPERFECT cancelado.', '💀', 'toast-bad');
       showMsg('El molinillo no es para todo el mundo. Entrenamiento requerido.');
     }
   }, 4000);
@@ -2694,8 +2807,8 @@ function buildWSK(ch) {
   // Pizzas (3 targets)
   if (S.pizzaActive && S.pizzaClicked) {
     html += `<div class="pizza-event">
-      <div class="pizza-header"><span>🍕 PEDIDO ESPECIAL</span><span class="pizza-mult">→ FURIA 100%</span></div>
-      <div class="pizza-sub">¡Coge las 3 pizzas antes de que se enfríen!</div>
+      <div class="pizza-header"><span>🍕 LA COCINA ESTÁ CERRADA</span><span class="pizza-mult">→ FURIA 100%</span></div>
+      <div class="pizza-sub">...pero alguien pide 3 pizzas. ¡Cógelas antes de que se enfríen!</div>
       <div class="pizza-targets">
         ${[0,1,2].map(i => S.pizzaClicked[i]
           ? `<span class="pizza-target pizza-done">✅</span>`
@@ -2941,8 +3054,8 @@ function buildXP(ch) {
   // Pizzas — 3 targets
   if (S.pizzaActive && S.pizzaClicked) {
     html += `<div class="pizza-event">
-      <div class="pizza-header"><span>🍕 PEDIDO ESPECIAL</span><span class="pizza-mult">→ FURIA 100%</span></div>
-      <div class="pizza-sub">¡Coge las 3 pizzas antes de que se enfríen!</div>
+      <div class="pizza-header"><span>🍕 LA COCINA ESTÁ CERRADA</span><span class="pizza-mult">→ FURIA 100%</span></div>
+      <div class="pizza-sub">...pero alguien pide 3 pizzas. ¡Cógelas antes de que se enfríen!</div>
       <div class="pizza-targets">
         ${[0,1,2].map(i => S.pizzaClicked[i]
           ? `<span class="pizza-target pizza-done">✅</span>`
@@ -3079,19 +3192,15 @@ function buildXP(ch) {
   // Batidiño de Setas (Extraperlo)
   if (S.setasActive) {
     const pct = S.setasDone;
-    const inZone = pct >= 50 && pct < 90;
-    html += `<div class="setas-event">
-      <div style="font-size:1.8rem">🍄</div>
+    const inZone = pct >= 50 && pct < 85;
+    html += `<div class="setas-event${inZone ? ' setas-in-zone' : ''}">
       <h4>🍄 BATIDIÑO DE SETAS</h4>
-      <p>Bate y para en la zona verde. ¡Sin pasarse!</p>
+      <p>${inZone ? '✅ ¡ZONA VERDE! ¡Para ahora!' : pct < 50 ? '⏳ Batiendo...' : '⚠️ ¡Casi sobredosis!'}</p>
       <div class="setas-bar-wrap">
         <div class="setas-zone"></div>
         <div class="setas-fill" style="width:${pct}%"></div>
       </div>
-      <div class="setas-btns">
-        <button class="setas-btn" onclick="clickSetasBatir()">🍄 BATIR</button>
-        ${inZone ? `<button class="setas-btn setas-servir" onclick="clickSetasServir()">✅ SERVIR</button>` : ''}
-      </div>
+      <button class="setas-btn setas-parar" onclick="clickSetasParar()">🛑 ¡PARAR!</button>
     </div>`;
   }
   if (S.setasBuffEnd && Date.now() < S.setasBuffEnd) {
@@ -3148,7 +3257,7 @@ function checkAchievements() {
     if (nextPid && !localStorage.getItem(`penona_${nextPid}_new`)) {
       localStorage.setItem(`penona_${nextPid}_new`, '1');
       const nextCh = CHARS[nextPid];
-      toast(`🔓 ¡${nextCh.name} DESBLOQUEADO! Vuelve al menú.`, '🎉');
+      toast(`🔓 ¡${nextCh.name} DESBLOQUEADO! Vuelve al menú.`, '🎉', 'toast-good');
     }
   }
 }
