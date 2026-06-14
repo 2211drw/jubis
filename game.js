@@ -296,6 +296,7 @@ const CHARS = {
       '¡Que tengo 37 años! Un poco de respeto, coño.',
       'Esto debería ser un SWELL EVENT. Lo debería.',
       'Footage sickness. Se lo diagnosticaron en el Triskel.',
+      'Esta no se la sabe Jose Eugenio.',
     ],
   },
 
@@ -419,9 +420,10 @@ const ACHIEVEMENTS = {
     { id:'papa_rabioso',     icon:'😤', name:'Papá Rabioso',           desc:'Primera vez. Lucia Martiño ya sabe quién es Weeman4k y lo lamenta.',            cond: s => (s.achData.papaRabiosoHits||0) >= 1 },
     { id:'dron_rey',         icon:'🚁', name:'Rey del Aire',           desc:'Dron instalado. El barrio visto desde arriba es igual de feo.',                 cond: s => (s.upgrades.dron||0) >= 1 },
     { id:'molinillo_1',      icon:'🌀', name:'El Molinillo',           desc:'Primer molinillo. Weeman4k ha inventado un deporte que practica solo.',         cond: s => (s.achData.molinillos||0) >= 1 },
-    { id:'daigo_films',      icon:'🏆', name:'Weeman4k Films',         desc:'50000 tomas. El mundo cinematográfico tiembla de vergüenza ajena.',             cond: s => s.totalCurrency >= 50000 },
+    { id:'daigo_films',      icon:'📸', name:'Las Primeras 10000',      desc:'Tus primeras 10000 fotos serán las peores. — Jose Eugenio',  cond: s => s.totalCurrency >= 50000 },
     { id:'swell_event',      icon:'🎉', name:'SWELL EVENT',            desc:'5 eventos de Coopers. Ha sido un SWELL EVENT, que es lo que más importa.',     cond: s => (s.achData.cooperInteractions||0) >= 5 },
     { id:'footage_sickness', icon:'🤢', name:'Footage Sickness',       desc:'7500 tomas. El disco duro llora en silencio.',                                  cond: s => s.totalCurrency >= 7500 },
+
     { id:'molinillo_5',      icon:'🌀🌀',name:'Maestro del Molinillo', desc:'5 molinillos. Nadie lo entiende. Nadie lo pide. Pero ahí está.',                cond: s => (s.achData.molinillos||0) >= 5 },
     { id:'papa_5',           icon:'😡', name:'Papá Está Muy Furioso',  desc:'5 veces con Papá Rabioso. Lucia Martiño ha bloqueado a toda la familia.',      cond: s => (s.achData.papaRabiosoHits||0) >= 5 },
     { id:'coopers_legend',   icon:'🐕', name:'Coopers Omnipresente',   desc:'10 interacciones. El perro está en más escenas que el protagonista.',           cond: s => (s.achData.cooperInteractions||0) >= 10 },
@@ -475,7 +477,7 @@ const ACHIEVEMENTS = {
     { id:'sin_apagones',     icon:'💡', name:'Sin Apagones',           desc:'3 cortes restaurados. Tienes llave del cuadro eléctrico del festival.',          cond: s => (s.achData.cortesRestaurados||0) >= 3 },
     { id:'caos_1m',          icon:'🌋', name:'El Festival Eterno',     desc:'1 millón de caos. Salinas ya te quiere como mascota oficial del municipio.',     cond: s => s.totalCurrency >= 1000000 },
     { id:'roca_20',          icon:'🤘', name:'Su Manager',             desc:'20 veces con Roca Pintada. Os compartís el camerino. No es voluntario.',        cond: s => (s.achData.rocaHits||0) >= 20 },
-    { id:'vasos_20',         icon:'🪣', name:'El Friegaplatos',        desc:'20 rondas de vasos. Tienes más horas de fregadero que de festival.',             cond: s => (s.achData.vasosLimpiados||0) >= 20 },
+    { id:'vasos_20',         icon:'🧽', name:'El Friegaplatos',        desc:'20 rondas de vasos. Tienes más horas de fregadero que de festival.',             cond: s => (s.achData.vasosLimpiados||0) >= 20 },
     { id:'setas_10',         icon:'🌀', name:'El Gurú de las Setas',   desc:'10 batidiños servidos. Tienes más clientes que Roca Pintada tiene fans.',       cond: s => (s.achData.setasServidas||0) >= 10 },
     { id:'luz_5',            icon:'🔦', name:'El Técnico de Guardia',  desc:'5 cortes restaurados. Tienes llave del cuadro eléctrico de Salinas también.',   cond: s => (s.achData.cortesRestaurados||0) >= 5 },
     { id:'rescate_5',        icon:'🌊', name:'Boya Humana',            desc:'5 rescates en el Extraperlo. Eres más útil en el agua que en tierra. Triste.',  cond: s => (s.achData.rescates||0) >= 5 },
