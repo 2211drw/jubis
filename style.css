@@ -1486,7 +1486,7 @@ body::before {
 #click-zone { display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: nowrap; }
 
 /* Coopers secondary button */
-.coopers-slot { display: flex; align-items: flex-start; justify-content: center; }
+.coopers-slot { display: flex; align-items: flex-start; justify-content: center; order: -1; }
 .coopers-column { display: flex; flex-direction: column; align-items: center; gap: 5px; }
 .coopers-widget {
   cursor: pointer; text-align: center;
