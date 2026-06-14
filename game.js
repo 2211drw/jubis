@@ -1521,7 +1521,7 @@ function startHold(type) {
         const txt = document.querySelector('.ola-reveal-txt');
         if (txt) {
           txt.textContent = S.olaDir === 'derecha' ? '→ ¡ES UNA DERECHA! ¡DALE DALE!' : '← ¡ES UNA IZQUIERDA!';
-          txt.style.color = S.olaDir === 'derecha' ? '#7dd3fc' : '#ff3300';
+          txt.style.color = S.olaDir === 'derecha' ? '#44ff88' : '#ff3300';
           txt.style.fontWeight = '900';
           txt.style.fontSize = '1rem';
         }
