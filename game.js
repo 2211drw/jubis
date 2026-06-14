@@ -1251,7 +1251,7 @@ function triggerPizza() {
   S.pizzaActive  = true;
   S.pizzaClicked = [false, false, false];
   renderSpecial();
-  toast('🍕 ¡PEDIDO ESPECIAL! ¡Coge las 3 pizzas!', '🍕');
+  toast('🍕 ¡LA COCINA ESTÁ CERRADA! ...pero alguien pide 3 pizzas', '🍕');
   showMsg(PIZZA_FRASES[Math.floor(Math.random() * PIZZA_FRASES.length)]);
   clearTimeout(S.pizzaTimer);
   S.pizzaTimer = setTimeout(() => {
