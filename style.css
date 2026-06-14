@@ -297,37 +297,25 @@ body::before {
 
 /* In-game big avatar */
 .avatar-display {
-  width: 140px; height: 160px;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 0 24px var(--theme-glow), 0 8px 32px rgba(0,0,0,.4);
+  width: 140px; height: 180px;
   animation: float 3.5s ease-in-out infinite;
-  background: var(--card2);
-  display: flex; align-items: center; justify-content: center;
+  background: transparent;
+  display: flex; align-items: flex-end; justify-content: center;
   position: relative;
 }
 .avatar-display svg { width: 100%; height: 100%; }
 .avatar-display .game-photo {
   width: 100%; height: 100%;
-  object-fit: cover;
-  object-position: center 12%;
+  object-fit: contain;
+  object-position: center bottom;
   display: block;
   animation: drug-hue 9s ease-in-out infinite;
   animation-delay: -1s;
 }
-.avatar-display .game-photo.photo-muchaga  { object-position: center 10%; }
-.avatar-display .game-photo.photo-fita     { object-position: center 5%;  animation-delay: -4s; }
-.avatar-display .game-photo.photo-noah     { object-position: center 8%;  animation-delay: -6s; }
-.avatar-display .game-photo.photo-nanduko  { object-position: center 22%; animation-delay: -2s; }
-/* theme color strip at bottom of game avatar */
-.avatar-display::after {
-  content: '';
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  height: 30%;
-  background: linear-gradient(to top, var(--theme-glow) 0%, transparent 100%);
-  pointer-events: none;
-}
+.avatar-display .game-photo.photo-fita     { animation-delay: -4s; }
+.avatar-display .game-photo.photo-noah     { animation-delay: -6s; }
+.avatar-display .game-photo.photo-nanduko  { animation-delay: -2s; }
+.avatar-display::after { display: none; }
 
 @keyframes float {
   0%,100% { transform: translateY(0) rotate(-0.5deg); }
