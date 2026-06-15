@@ -421,7 +421,7 @@ const ACHIEVEMENTS = {
     { id:'dron_rey',         icon:'🚁', name:'Rey del Aire',           desc:'Dron instalado. El barrio visto desde arriba es igual de feo.',                 cond: s => (s.upgrades.dron||0) >= 1 },
     { id:'molinillo_1',      icon:'🌀', name:'El Molinillo',           desc:'Primer molinillo. Weeman4k ha inventado un deporte que practica solo.',         cond: s => (s.achData.molinillos||0) >= 1 },
     { id:'daigo_films',      icon:'📸', name:'Las Primeras 10000',      desc:'Tus primeras 10000 fotos serán las peores. — Jose Eugenio',  cond: s => s.totalCurrency >= 50000 },
-    { id:'swell_event',      icon:'🎉', name:'SWELL EVENT',            desc:'5 eventos de Coopers. Ha sido un SWELL EVENT, que es lo que más importa.',     cond: s => (s.achData.cooperInteractions||0) >= 5 },
+    { id:'swell_event',      icon:'🎉', name:'SWELL EVENT',            desc:'5 eventos de Coopers completados. Ha sido un SWELL EVENT, que es lo que más importa.',     cond: s => (s.achData.cagadasEvitadas||0) + (s.achData.looteos||0) + (s.achData.jamones||0) >= 5 },
     { id:'footage_sickness', icon:'🤢', name:'Footage Sickness',       desc:'7500 tomas. El disco duro llora en silencio.',                                  cond: s => s.totalCurrency >= 7500 },
 
     { id:'molinillo_5',      icon:'🌀🌀',name:'Maestro del Molinillo', desc:'5 molinillos. Nadie lo entiende. Nadie lo pide. Pero ahí está.',                cond: s => (s.achData.molinillos||0) >= 5 },
@@ -1469,7 +1469,7 @@ function triggerFight() {
       S.currency = Math.max(0, S.currency - dmg);
       S.fightActive = false; S.fightPunch = null;
       S.furiaLevel = 0;
-      renderSpecial(); toast(`¡Te ha dado! Furia perdida. -${fmt(dmg)} cañas`, '💥');
+      animateEndEvent('.fight-event', false, renderSpecial); toast(`¡Te ha dado! Furia perdida. -${fmt(dmg)} cañas`, '💥');
       showMsg('¡TOUCHÉ! No reaccionaste. La furia se esfuma junto con el dinero.');
       updateDisplays();
     }
@@ -1484,7 +1484,7 @@ function clickFight(key) {
     const b = Math.max(80, Math.floor(S.currency * 0.3));
     S.currency += b; S.totalCurrency += b; S.achData.fightWins++;
     S.fightActive = false; S.fightPunch = null;
-    renderSpecial(); toast(`¡ESQUIVADO! +${fmt(b)} cañas 🥊`, '🎯', 'toast-good');
+    animateEndEvent('.fight-event', true, renderSpecial); toast(`¡ESQUIVADO! +${fmt(b)} cañas 🥊`, '🎯', 'toast-good');
     showMsg('¡Muchaga esquiva como un bailarín borracho! ¡El bar enloquece!');
     updateDisplays();
   } else {
@@ -1492,7 +1492,7 @@ function clickFight(key) {
     S.currency = Math.max(0, S.currency - dmg); S.achData.fightLosses++;
     S.fightActive = false; S.fightPunch = null;
     S.furiaLevel = 0;
-    renderSpecial(); toast(`¡Mal lado! Furia perdida. -${fmt(dmg)} cañas`, '😵');
+    animateEndEvent('.fight-event', false, renderSpecial); toast(`¡Mal lado! Furia perdida. -${fmt(dmg)} cañas`, '😵');
     showMsg('Lado equivocado. La furia se esfuma. Toca volver a acumular.');
     updateDisplays();
   }
@@ -1660,7 +1660,7 @@ function clickChupaCorner(idx) {
     S.energy       = 100;
     S.achData.chupaWins = (S.achData.chupaWins || 0) + 1;
     S.achData.dobletazos++;
-    renderSpecial();
+    animateEndEvent('.chupa-event', true, renderSpecial);
     toast('🛍️✅ ¡TRIPLETE! ×10 durante 3 segundos. ¡Chupa más!', '⚡');
     showMsg('La bolsa funciona. Triplete activado. 3 segundos de gloria total.');
     updateDisplays();
@@ -1679,13 +1679,15 @@ function triggerYeyo() {
 function resolveYeyo() {
   holdProgress = 0; holdType = null;
   S.yeyoActive = false;
+  let yeyoOk = false;
   if (Math.random() < 0.55) {
+    yeyoOk = true;
     S.achData.yeyoWins++;
     const b = Math.max(200, Math.floor(S.currency * 0.8));
     S.currency += b; S.totalCurrency += b;
     S.tripleActive = true; S.tripleEnd = Date.now() + 15000;
     S.energy = 100; S.achData.dobletazos++;
-    renderSpecial(); toast(`¡TRIPLETE! +${fmt(b)} Vicios 🚀 ¡15s de gloria!`, '⚡');
+    toast(`¡TRIPLETE! +${fmt(b)} Vicios 🚀 ¡15s de gloria!`, '⚡');
     showMsg('¡TRIPLETE ACTIVADO! La barra aguanta sola. El olfato: perfecto. Fita está ON.');
   } else {
     const dmg = Math.max(50, Math.floor(S.energy * 0.6));
@@ -1693,9 +1695,10 @@ function resolveYeyo() {
     S.debuffEnd = Date.now() + 12000;
     S.achData.yeyoFails++;
     S.yeyoActive = true;
-    renderSpecial(); toast('Era rascadura de la pared. Sabor a yeso. -12s debuff 🤢', '🤮');
+    toast('Era rascadura de la pared. Sabor a yeso. -12s debuff 🤢', '🤮');
     showMsg('Era la pared. Literalmente la pared. La energía cae sola.');
   }
+  animateEndEvent('.yeyo-event', yeyoOk, renderSpecial);
   updateDisplays();
 }
 
@@ -1753,7 +1756,9 @@ function clickChica() {
   clearTimeout(S.chicaTimer);
   S.chicaActive = false;
   const ch = CHARS[S.pid];
+  let liga = false;
   if (Math.random() < 0.5) {
+    liga = true;
     const b = Math.max(50, Math.floor(S.currency * 0.25));
     S.currency += b; S.totalCurrency += b; S.achData.chicaLiga++;
     S.ligaBuffEnd = Date.now() + 10000;
@@ -1764,7 +1769,7 @@ function clickChica() {
     toast('Rechazo. Ha dicho que "¿no tenías novia?". No tienes.', '😬', 'toast-bad');
     showMsg('La próxima vez guarda el teléfono cuando hablas con alguien, Noah.');
   }
-  renderSpecial(); updateDisplays();
+  animateEndEvent('.chica-event', liga, renderSpecial); updateDisplays();
 }
 
 function triggerSTD() {
@@ -1778,7 +1783,7 @@ function clickFarmacia() {
   const cost = Math.max(200, Math.floor(S.totalCurrency * 0.1));
   if (S.currency < cost) { toast(`Necesitas ${fmt(cost)} ${ch.icon} para la farmacia`, '💊'); return; }
   S.currency -= cost; S.stdActive = false; S.achData.farmacia++;
-  renderSpecial();
+  animateEndEvent('.std-event', true, renderSpecial);
   toast('¡Curado! El farmacéutico no ha dicho nada... con la boca.', '💊');
   showMsg('El farmacéutico te ha mirado raro. Normal. Ya estás bien.');
   updateDisplays();
@@ -1807,7 +1812,7 @@ function triggerAhogado() {
     if (S.ahogadoActive) {
       S.ahogadoActive = false;
       S.ahogadoDebuffEnd = Date.now() + 20000;
-      renderSpecial();
+      animateEndEvent('.ahogado-event', false, renderSpecial);
       const titular = VOZ_FAIL[Math.floor(Math.random() * VOZ_FAIL.length)];
       toast(titular, '📰', 'toast-voz-fail');
       showMsg('El bañista se las apañó solo. La Voz de Asturias ya tiene redactor en camino.');
@@ -1827,7 +1832,7 @@ function clickSocorro() {
     S.ahogadoActive = false;
     S.achData.rescates = (S.achData.rescates || 0) + 1;
     S.ahogadoBuffEnd = Date.now() + 15000;
-    renderSpecial();
+    animateEndEvent('.ahogado-event', true, renderSpecial);
     const titular = VOZ_HERO[Math.floor(Math.random() * VOZ_HERO.length)];
     toast(titular, '📰', 'toast-voz-hero');
     showMsg('¡Rescate completado! La Voz de Asturias ya tiene titular para mañana.');
@@ -1962,7 +1967,7 @@ function triggerIdealista() {
   S.idealistaTimer = setTimeout(() => {
     if (S.idealistaActive) {
       S.idealistaActive = false; S.idealistaPiso = null; S.salinasConteo = 0;
-      renderSpecial();
+      animateEndEvent('.idealista-event', false, renderSpecial);
       toast('🏠 Se fue el piso. Lo pillaron antes.', '😤', 'toast-bad');
     }
   }, piso.sec * 1000);
@@ -1992,13 +1997,13 @@ function clickIdealista() {
     S.yappingActive = false;
     S.chapaSilencioActive = true;
     S.chapaSilencioEnd = Date.now() + 4000;
-    renderSpecial();
+    animateEndEvent('.idealista-event', false, renderSpecial);
     toast('🤢 ¡¡VILLA CLOACA!! Yapping a 0. ×0.3 durante 20s de vergüenza ajena', '🤢', 'toast-bad');
   } else {
     S.idealistaBuffEnd = Date.now() + piso.sec * 1000;
     S.idealistaBuffMult = piso.mult;
     S.chapa = Math.min(100, (S.chapa || 0) + 30);
-    renderSpecial();
+    animateEndEvent('.idealista-event', true, renderSpecial);
     const msg = piso.zona === 'Salinas'
       ? `⭐ ¡¡SALINAS LEGENDARIO!! ×${piso.mult} durante ${piso.sec}s — Diego tiene MUCHO que contar`
       : `🏠 Visitado ${piso.zona} · ×${piso.mult} durante ${piso.sec}s`;
@@ -2014,9 +2019,10 @@ function triggerOla() {
   clearTimeout(S.olaTimer);
   S.olaTimer = setTimeout(() => {
     if (S.olaActive && holdType !== 'ola') {
+      const wasIzquierda = S.olaDir === 'izquierda';
       S.olaActive = false; S.olaDir = null; S.olaRevealed = false;
-      animateEndEvent('.ola-event', false, renderSpecial);
-      toast('🌊 La ola pasó sin que la cogieras.', '🌊');
+      animateEndEvent('.ola-event', wasIzquierda, renderSpecial);
+      toast(wasIzquierda ? '🌊 Bien hecho, era una izquierda. La dejaste pasar.' : '🌊 La ola pasó sin que la cogieras.', '🌊', wasIzquierda ? 'toast-good' : '');
     }
   }, 9000);
   renderSpecial();
@@ -2599,9 +2605,21 @@ function tickDaigo() {
   }
 }
 
+let _animatingCoopers = false;
+
+function animateCoopersEvent(success, cb) {
+  const el = document.getElementById('coopers-event-mini');
+  const card = el && el.firstElementChild;
+  if (!card) { cb(); return; }
+  _animatingCoopers = true;
+  card.classList.add(success ? 'event-exit-good' : 'event-exit-bad');
+  setTimeout(() => { _animatingCoopers = false; cb(); }, 360);
+}
+
 function renderCoopersEventMini() {
   const el = document.getElementById('coopers-event-mini');
   if (!el) return;
+  if (_animatingCoopers) return;
   if (!S.coopersEvent) { el.innerHTML = ''; return; }
   if (S.coopersEvent === 'cagar') {
     el.innerHTML = `<div class="mini-event mini-cagar">💩 <span>¡NO PULSES!</span></div>`;
@@ -2632,8 +2650,8 @@ function triggerCoopersEvent() {
         S.achData.cagadasEvitadas = (S.achData.cagadasEvitadas || 0) + 1;
         S.coopersEvent = null;
         earn(Math.floor(calcPC() * 5));
-        toast('💩 Coopers dejó su obra en la acera. Bien hecho.', '✅');
-        renderCoopersEventMini();
+        toast('💩 Coopers dejó su obra en la acera. Bien hecho.', '✅', 'toast-good');
+        animateCoopersEvent(true, renderCoopersEventMini);
       }
     }, 5000);
   } else if (rand < 0.66) {
@@ -2647,7 +2665,7 @@ function triggerCoopersEvent() {
     S.coopersTimer = setTimeout(() => {
       if (S.coopersEvent === 'lootear') {
         S.coopersEvent = null;
-        renderCoopersEventMini();
+        animateCoopersEvent(false, renderCoopersEventMini);
         triggerPapaRabioso('Coopers tiró el botín. Lamentable pérdida gastronómica.');
       }
     }, 6000);
@@ -2661,7 +2679,7 @@ function triggerCoopersEvent() {
     S.coopersTimer = setTimeout(() => {
       if (S.coopersEvent === 'jamon') {
         S.coopersEvent = null;
-        renderCoopersEventMini();
+        animateCoopersEvent(false, renderCoopersEventMini);
         toast('Coopers sigue apestando. Que se note en el barrio.', '😮‍💨');
       }
     }, 7000);
@@ -2677,8 +2695,8 @@ function clickCoopers() {
     S.coopersEvent = null;
     S.achData.cagadasRecogidas = (S.achData.cagadasRecogidas || 0) + 1;
     S.cagadaDebuffEnd = Date.now() + 10000;
-    toast('💩 Recogiste la mierda. Brillante movida, Daigo.', '💩');
-    renderCoopersEventMini(); updateDisplays();
+    toast('💩 Recogiste la mierda. Brillante movida, Daigo.', '💩', 'toast-bad');
+    animateCoopersEvent(false, renderCoopersEventMini); updateDisplays();
   } else if (S.coopersEvent === 'lootear') {
     S.coopersLootDone++;
     if (S.coopersLootDone >= S.coopersLootNeed) {
@@ -2687,7 +2705,7 @@ function clickCoopers() {
       S.achData.looteos = (S.achData.looteos || 0) + 1;
       S.cooperLootBuffEnd = Date.now() + 8000;
       toast('🍕 ¡LOOTEO COMPLETO! ×2 durante 8s', '🍕', 'toast-good');
-      renderCoopersEventMini(); updateDisplays();
+      animateCoopersEvent(true, renderCoopersEventMini); updateDisplays();
     } else { renderCoopersEventMini(); }
   } else if (S.coopersEvent === 'jamon') {
     S.coopersJamonDone++;
@@ -2697,7 +2715,7 @@ function clickCoopers() {
       S.achData.jamones = (S.achData.jamones || 0) + 1;
       S.cooperJamonBuffEnd = Date.now() + 12000;
       toast('🐾 ¡Coopers limpio! ×1.5 durante 12s', '🐾');
-      renderCoopersEventMini(); updateDisplays();
+      animateCoopersEvent(true, renderCoopersEventMini); updateDisplays();
     } else { renderCoopersEventMini(); }
   }
 }
@@ -2739,7 +2757,7 @@ function triggerPapaRabioso(motivo) {
     if (S.papaRabioso) {
       S.papaRabioso = false;
       toast('El papá rabioso se calmó. Sin buff.', '😮‍💨');
-      renderSpecial();
+      animateEndEvent('.papa-event', false, renderSpecial);
     }
   }, 5000);
 }
@@ -2754,7 +2772,7 @@ function clickPapa() {
     S.papaBuffEnd = Date.now() + 8000;
     toast('😤✅ ¡HATE SOLTADO! ×3 durante 8s. Lucia lo notará.', '😤', 'toast-good');
     showMsg('El hate es energía. Daigo lo sabe mejor que nadie.');
-    renderSpecial(); updateDisplays();
+    animateEndEvent('.papa-event', true, renderSpecial); updateDisplays();
   } else { renderSpecial(); }
 }
 
@@ -2770,7 +2788,7 @@ function triggerMolinillo() {
       S.molinilloActive = false;
       S.ultraActive     = false;
       S.ultraEnd        = 0;
-      renderSpecial();
+      animateEndEvent('.molinillo-event', false, renderSpecial);
       toast('🌀❌ Molinillo fallado. ULTRAPERFECT cancelado.', '💀', 'toast-bad');
       showMsg('El molinillo no es para todo el mundo. Entrenamiento requerido.');
     }
@@ -2785,7 +2803,7 @@ function clickMolinillo() {
     S.molinilloActive   = false;
     S.molinilloBuffEnd  = Date.now() + 8000;
     S.achData.molinillos = (S.achData.molinillos || 0) + 1;
-    renderSpecial();
+    animateEndEvent('.molinillo-event', true, renderSpecial);
     toast('🌀✅ ¡MOLINILLO COMPLETADO! ×5 adicional durante 8s', '🌀');
     showMsg('El molinillo en su máximo esplendor. Daigo, eres único.');
     updateDisplays();
