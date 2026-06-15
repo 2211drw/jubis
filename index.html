@@ -118,6 +118,17 @@
 <div id="toast-container" class="toast-container"></div>
 <div id="particles" class="particles"></div>
 
+<!-- Congratulations overlay -->
+<div id="congrats-overlay" class="congrats-overlay hidden" onclick="if(event.target===this){this.classList.add('hidden');stopFireworks();}">
+  <div class="congrats-card">
+    <div class="congrats-emoji">🎉🏆🎉</div>
+    <h2 class="congrats-title">¡ENHORABUENA!</h2>
+    <p class="congrats-body">Has completado todos los logros.<br>Gracias por jugar.</p>
+    <p class="congrats-invite">🍺 <strong>Muchaga te invita a un cañón</strong><br>en el Club Jubilados La Peñona.</p>
+    <button class="congrats-btn" onclick="document.getElementById('congrats-overlay').classList.add('hidden');stopFireworks();">¡Salud! 🥂</button>
+  </div>
+</div>
+
 <!-- SVG filter defs: drug warp distortion applied to character photos -->
 <svg width="0" height="0" style="position:absolute;pointer-events:none" aria-hidden="true">
   <defs>

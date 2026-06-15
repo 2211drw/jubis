@@ -937,6 +937,7 @@ function stopGame() {
 
 function goBack() {
   if (!confirm('¿Seguro que quieres salir? Se perderá la sesión actual.')) return;
+  stopFireworks();
   stopGame();
   [S.chicaTimer, S.ahogadoTimer, S.idealistaTimer, S.olaTimer, S.interrumpidorTimer, S.policeTimer, S.rocaTimer, S.fightTimer, S.banyoTimer, S.raicesTimer, S.coopersTimer, S.diarreaTimer, S.papaTimer, S.molinilloTimer, S.setasTimer, S.corteLuzTimer].forEach(t => clearTimeout(t));
   document.getElementById('coopers-slot').style.display = 'none';
@@ -1492,6 +1493,39 @@ function clickFight(key) {
   }
 }
 
+
+// ——— FIREWORKS ———
+let _fireworksTimer = null;
+
+function launchFireworks() {
+  const container = document.getElementById('particles');
+  const colors = ['#ff4488','#ffcc00','#44ffcc','#ff8844','#88ff44','#cc44ff','#44ccff','#ffffff','#ff6666'];
+  function burst() {
+    if (_fireworksTimer === null) return;
+    const x = 5 + Math.random() * 90;
+    const y = 5 + Math.random() * 80;
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const count = 10 + Math.floor(Math.random() * 8);
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2;
+      const dist = 50 + Math.random() * 90;
+      const el = document.createElement('div');
+      el.className = 'firework-spark';
+      el.style.cssText = `left:${x}%;top:${y}%;background:${color};box-shadow:0 0 5px ${color};--dx:${(Math.cos(angle)*dist).toFixed(1)}px;--dy:${(Math.sin(angle)*dist).toFixed(1)}px;`;
+      container.appendChild(el);
+      setTimeout(() => el.remove(), 900);
+    }
+    _fireworksTimer = setTimeout(burst, 220 + Math.random() * 380);
+  }
+  stopFireworks();
+  _fireworksTimer = setTimeout(burst, 0);
+}
+
+function stopFireworks() {
+  if (_fireworksTimer !== null) { clearTimeout(_fireworksTimer); _fireworksTimer = null; }
+  const c = document.getElementById('particles');
+  if (c) c.innerHTML = '';
+}
 
 // ——— HOLD MECHANIC (nariz) ———
 let holdInterval = null;
@@ -2248,6 +2282,7 @@ function triggerRaices() {
       S.raicesActive = false;
       S.raicesDebuffEnd = Date.now() + 15000;
       S.achData.raicesCaptures = (S.achData.raicesCaptures || 0) + 1;
+      S.achData.policeCaptures = (S.achData.policeCaptures || 0) + 1;
       S.currency = 0;
       renderSpecial();
       toast('Te quedaste parado. ¡Pillado y desplumado!', '🚔', 'toast-bad');
@@ -2273,6 +2308,7 @@ function clickRaices(routeId) {
   } else {
     S.raicesDebuffEnd = Date.now() + 15000;
     S.achData.raicesCaptures = (S.achData.raicesCaptures || 0) + 1;
+    S.achData.policeCaptures = (S.achData.policeCaptures || 0) + 1;
     S.currency = 0;
     renderSpecial();
     toast(`🚔 Control en ${route.icon} ${route.name}. ¡Pasta confiscada!`, '😬', 'toast-bad');
@@ -3347,6 +3383,7 @@ function renderAchievements() {
   const done    = achs.filter(a => S.achievements[a.id]).length;
   document.querySelector('.ach-header span').textContent = `🏆 Logros (${done}/${total})`;
   if (done === total && total > 0) {
+    launchFireworks();
     const footer = document.createElement('div');
     footer.className = 'ach-complete-footer';
     footer.innerHTML = `
@@ -3359,7 +3396,18 @@ function renderAchievements() {
 
 function finishAndExit() {
   toggleAchievements();
-  goBack();
+  stopGame();
+  [S.chicaTimer, S.ahogadoTimer, S.idealistaTimer, S.olaTimer, S.interrumpidorTimer, S.policeTimer, S.rocaTimer, S.fightTimer, S.banyoTimer, S.raicesTimer, S.coopersTimer, S.diarreaTimer, S.papaTimer, S.molinilloTimer, S.setasTimer, S.corteLuzTimer].forEach(t => clearTimeout(t));
+  document.getElementById('coopers-slot').style.display = 'none';
+  clearInterval(holdInterval); holdInterval = null; holdProgress = 0; holdType = null;
+  S.pid = null;
+  if (_floaterState.game.raf) { cancelAnimationFrame(_floaterState.game.raf); _floaterState.game.raf = null; }
+  document.getElementById('game-screen').classList.add('hidden');
+  document.getElementById('selection-screen').classList.remove('hidden');
+  renderSelection();
+  setTheme({ theme:'#ffe899', themeD:'#e8c840', themeG:'rgba(255,232,153,0.28)' });
+  launchFireworks();
+  document.getElementById('congrats-overlay').classList.remove('hidden');
 }
 
 // ================================================================

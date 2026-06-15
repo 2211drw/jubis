@@ -1406,6 +1406,77 @@ body::before {
 .ach-finish-btn:active { transform: scale(.96); }
 
 /* ============================================================
+   FIREWORKS
+   ============================================================ */
+.firework-spark {
+  position: fixed;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9000;
+  animation: spark-fly 0.9s ease-out forwards;
+}
+@keyframes spark-fly {
+  0%   { transform: translate(0,0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--dx),var(--dy)) scale(0.1); opacity: 0; }
+}
+
+/* ============================================================
+   CONGRATULATIONS OVERLAY
+   ============================================================ */
+.congrats-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.75);
+  z-index: 9500;
+  display: flex; align-items: center; justify-content: center;
+}
+.congrats-overlay.hidden { display: none; }
+.congrats-card {
+  background: linear-gradient(135deg, #1a0a2e, #2d1a4a);
+  border: 2px solid var(--gold);
+  border-radius: 24px;
+  padding: 2.5rem 2rem;
+  max-width: 360px; width: 90%;
+  text-align: center;
+  box-shadow: 0 0 60px rgba(255,232,153,.35), 0 12px 40px rgba(0,0,0,.7);
+  animation: congrats-pop .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes congrats-pop {
+  from { transform: scale(.6); opacity: 0; }
+  to   { transform: scale(1);  opacity: 1; }
+}
+.congrats-emoji { font-size: 2.8rem; margin-bottom: 0.5rem; }
+.congrats-title {
+  font-family: 'Lilita One', sans-serif;
+  font-size: 2rem; color: var(--gold);
+  margin: 0 0 0.8rem;
+  text-shadow: 0 0 18px rgba(255,232,153,.6);
+}
+.congrats-body {
+  color: var(--text); font-size: 1rem; line-height: 1.5;
+  margin: 0 0 1rem;
+}
+.congrats-invite {
+  background: rgba(255,232,153,.1);
+  border: 1px solid rgba(255,232,153,.3);
+  border-radius: 12px;
+  padding: 0.8rem 1rem;
+  color: var(--gold); font-size: 1rem; line-height: 1.6;
+  margin: 0 0 1.5rem;
+}
+.congrats-btn {
+  font-family: 'Lilita One', sans-serif;
+  font-size: 1.2rem;
+  background: linear-gradient(135deg, var(--theme-d), var(--theme));
+  color: #000; border: none; border-radius: 14px;
+  padding: 0.75rem 2rem; cursor: pointer;
+  box-shadow: 0 0 16px var(--theme-glow);
+  transition: filter .15s, transform .15s;
+}
+.congrats-btn:hover  { filter: brightness(1.2); }
+.congrats-btn:active { transform: scale(.95); }
+
+/* ============================================================
    TOAST NOTIFICATION
    ============================================================ */
 .toast-container {
