@@ -589,7 +589,8 @@ function resetAll() {
 const _floaterState = { menu: { raf: null, particles: [] }, game: { raf: null, particles: [] } };
 
 // sources: array of strings — "assets/foo.png" for images, or emoji char for text
-function runFloaters(key, containerEl, cssClass, count, minSize, maxSize, sources, isAlive) {
+function runFloaters(key, containerEl, cssClass, count, minSize, maxSize, sources, isAlive, opts = {}) {
+  const { collide = true, minOp = 0.06, maxOp = 0.15 } = opts;
   const state = _floaterState[key];
   if (state.raf) { cancelAnimationFrame(state.raf); state.raf = null; }
   containerEl.querySelectorAll('.' + cssClass).forEach(el => el.remove());
@@ -613,7 +614,7 @@ function runFloaters(key, containerEl, cssClass, count, minSize, maxSize, source
       el.style.cssText = `width:${size}px;height:${size}px;font-size:${(size * 0.72).toFixed(0)}px;display:flex;align-items:center;justify-content:center;line-height:1;`;
     }
     el.className = cssClass;
-    el.style.opacity = (0.06 + Math.random() * 0.09).toFixed(3);
+    el.style.opacity = (minOp + Math.random() * (maxOp - minOp)).toFixed(3);
     containerEl.appendChild(el);
 
     const angle = Math.random() * Math.PI * 2;
@@ -641,21 +642,23 @@ function runFloaters(key, containerEl, cssClass, count, minSize, maxSize, source
       if (p.y + p.r > H2)  { p.y = H2 - p.r; p.vy = -Math.abs(p.vy); }
     }
 
-    for (let i = 0; i < pts.length; i++) {
-      for (let j = i + 1; j < pts.length; j++) {
-        const a = pts[i], b = pts[j];
-        const dx = b.x - a.x, dy = b.y - a.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const min  = a.r + b.r;
-        if (dist < min && dist > 0) {
-          const nx = dx / dist, ny = dy / dist;
-          const ov = (min - dist) / 2;
-          a.x -= nx * ov; a.y -= ny * ov;
-          b.x += nx * ov; b.y += ny * ov;
-          const dot = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;
-          if (dot > 0) {
-            a.vx -= dot * nx; a.vy -= dot * ny;
-            b.vx += dot * nx; b.vy += dot * ny;
+    if (collide) {
+      for (let i = 0; i < pts.length; i++) {
+        for (let j = i + 1; j < pts.length; j++) {
+          const a = pts[i], b = pts[j];
+          const dx = b.x - a.x, dy = b.y - a.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const min  = a.r + b.r;
+          if (dist < min && dist > 0) {
+            const nx = dx / dist, ny = dy / dist;
+            const ov = (min - dist) / 2;
+            a.x -= nx * ov; a.y -= ny * ov;
+            b.x += nx * ov; b.y += ny * ov;
+            const dot = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;
+            if (dot > 0) {
+              a.vx -= dot * nx; a.vy -= dot * ny;
+              b.vx += dot * nx; b.vy += dot * ny;
+            }
           }
         }
       }
@@ -687,13 +690,14 @@ function startGameFloaters(pid) {
   if (!container) return;
   const ch = CHARS[pid];
   if (!ch) return;
-  const sources = pid === 'extraperlo'
-    ? FLOATER_PHOTOS
-    : [`assets/${ch.photo || pid}.png`, ch.icon];
-  runFloaters(
-    'game', container, 'game-floater', 50, 30, 65, sources,
-    () => !document.getElementById('game-screen').classList.contains('hidden')
-  );
+  const isAlive = () => !document.getElementById('game-screen').classList.contains('hidden');
+  if (pid === 'extraperlo') {
+    runFloaters('game', container, 'game-floater-xp', 8, 38, 75, FLOATER_PHOTOS, isAlive,
+      { collide: false, minOp: 0.10, maxOp: 0.24 });
+  } else {
+    runFloaters('game', container, 'game-floater', 15, 28, 58, [`assets/${ch.photo || pid}.png`, ch.icon], isAlive,
+      { collide: false, minOp: 0.06, maxOp: 0.13 });
+  }
 }
 
 function renderSelection() {
@@ -1375,7 +1379,7 @@ function triggerPizza() {
   S.pizzaTimer = setTimeout(() => {
     if (S.pizzaActive) {
       S.pizzaActive = false;
-      renderSpecial();
+      animateEndEvent('.pizza-event', false, renderSpecial);
       toast('Las pizzas se han enfriado. Oportunidad perdida.', '🥶', 'toast-bad');
       showMsg('Nadie recogió las pizzas. Se quedan ahí, insultando.');
     }
@@ -1389,7 +1393,7 @@ function clickPizza(i) {
     clearTimeout(S.pizzaTimer);
     S.pizzaActive = false;
     S.furiaLevel  = 100;
-    renderSpecial();
+    animateEndEvent('.pizza-event', true, renderSpecial);
     toast('🍕🍕🍕 ¡PEDIDO COMPLETADO! ¡FURIA AL MÁXIMO!', '🔥', 'toast-good');
     showMsg('¡Tres pizzas cogidas! La furia de Muchaga se dispara al límite. ×5 activado.');
     updateDisplays();
@@ -1422,7 +1426,7 @@ function triggerGresca() {
     if (S.grescaActive) {
       S.grescaActive = false;
       S.currency = 0;
-      renderSpecial();
+      animateEndEvent('.gresca-event', false, renderSpecial);
       toast('¡Los abuelos han destrozado la caja!💸 Dinero a 0.', '😱', 'toast-bad');
       showMsg('Los abuelos han arrasado con todo. Hasta el cajón está abierto y vacío.');
       updateDisplays();
@@ -1440,7 +1444,7 @@ function clickGresca() {
     const reward = Math.max(200, Math.floor(S.totalCurrency * 0.3));
     earn(reward);
     S.achData.fightWins = (S.achData.fightWins || 0) + 1;
-    renderSpecial();
+    animateEndEvent('.gresca-event', true, renderSpecial);
     toast(`👴 ¡Abuelos separados! +${fmt(reward)} ${ch.icon}`, '✅', 'toast-good');
     showMsg('Los abuelos están en sillas distintas. Te dan las gracias y sacan el monedero.');
     updateDisplays();
@@ -1526,6 +1530,21 @@ function stopFireworks() {
   if (_fireworksTimer !== null) { clearTimeout(_fireworksTimer); _fireworksTimer = null; }
   const c = document.getElementById('particles');
   if (c) c.innerHTML = '';
+}
+
+// ——— EVENT EXIT ANIMATION ———
+let _animatingEvent = false;
+
+function animateEndEvent(selector, success, cb) {
+  const area = document.getElementById('special-area');
+  const card = area && area.querySelector(selector);
+  if (!card) { cb(); return; }
+  _animatingEvent = true;
+  card.classList.add(success ? 'event-exit-good' : 'event-exit-bad');
+  setTimeout(() => {
+    _animatingEvent = false;
+    cb();
+  }, 360);
 }
 
 // ——— HOLD MECHANIC (nariz) ———
@@ -1996,7 +2015,7 @@ function triggerOla() {
   S.olaTimer = setTimeout(() => {
     if (S.olaActive && holdType !== 'ola') {
       S.olaActive = false; S.olaDir = null; S.olaRevealed = false;
-      renderSpecial();
+      animateEndEvent('.ola-event', false, renderSpecial);
       toast('🌊 La ola pasó sin que la cogieras.', '🌊');
     }
   }, 9000);
@@ -2008,7 +2027,7 @@ function resolveOla() {
   clearTimeout(S.olaTimer);
   const dir = S.olaDir;
   S.olaActive = false; S.olaDir = null; S.olaRevealed = false;
-  renderSpecial();
+  animateEndEvent('.ola-event', dir === 'derecha', renderSpecial);
   if (dir === 'derecha') {
     S.achData.olasDerechas = (S.achData.olasDerechas || 0) + 1;
     S.olaBuffEnd = Date.now() + 15000;
@@ -2027,7 +2046,7 @@ function _failInterruptor() {
   S.olaBuffEnd = 0; S.olaDebuffEnd = 0;
   S.callarBuffEnd = 0; S.idealistaBuffEnd = 0; S.avilesDebuffEnd = 0;
   S.chapaSilencioActive = true; S.chapaSilencioEnd = Date.now() + 5000;
-  renderSpecial(); updateDisplays();
+  animateEndEvent('.interruptor-event', false, renderSpecial); updateDisplays();
   toast('💀 ¡TE HAN CALLADO! Bufos y Yapping perdidos.', '💀', 'toast-bad');
 }
 
@@ -2074,13 +2093,13 @@ function clickInterruptor() {
     S.interrumpidorActive = false;
     S.achData.interrupciones = (S.achData.interrupciones || 0) + 1;
     S.callarBuffEnd = Date.now() + 10000;
-    renderSpecial();
+    animateEndEvent('.interruptor-event', true, renderSpecial);
     toast('🤫 ¡ZONA PERFECTA! Callado con clase. ×4 durante 10s', '🤫', 'toast-good');
   } else if (pos >= L.os && pos <= L.oe) {
     S.interrumpidorActive = false;
     S.yappingEnd = (S.yappingEnd || Date.now()) + 10000;
     S.chapa = Math.min(100, (S.chapa || 0) + 10);
-    renderSpecial();
+    animateEndEvent('.interruptor-event', true, renderSpecial);
     toast('💢 ¡DISCUTIDO! Yapping extendido +10s', '💢');
   } else {
     _failInterruptor();
@@ -2227,7 +2246,7 @@ function triggerBanyo() {
       S.banyoNeed = null;
       const fine = Math.max(80, Math.floor(S.currency * 0.3));
       S.currency = Math.max(0, S.currency - fine);
-      renderSpecial(); toast(`⏰ ¡Plantón! El cliente se largó. -${fmt(fine)} 💵`, '😤', 'toast-bad');
+      animateEndEvent('.banyo-event', false, renderSpecial); toast(`⏰ ¡Plantón! El cliente se largó. -${fmt(fine)} 💵`, '😤', 'toast-bad');
       showMsg('El cliente esperó y esperó. Ha perdido la confianza en tu empresa.');
       updateDisplays();
     }
@@ -2242,7 +2261,7 @@ function resolveBanyo() {
   S.currency += b; S.totalCurrency += b;
   S.achData.banyoWins++;
   S.banyoBuffEnd = Date.now() + 10000;
-  renderSpecial(); toast(`💼 ¡Trato cerrado! +${fmt(b)} 💵 ×4 durante 10s`, '🤝', 'toast-good');
+  animateEndEvent('.banyo-event', true, renderSpecial); toast(`💼 ¡Trato cerrado! +${fmt(b)} 💵 ×4 durante 10s`, '🤝', 'toast-good');
   showMsg('Reunión productiva. Breve. Discreta. El cliente sale contento y tú también. ×4 activado.');
   updateDisplays();
 }
@@ -2257,7 +2276,7 @@ function clickBanyoDrug(drugId) {
     S.banyoNeed = null;
     const fine = Math.max(50, Math.floor(S.currency * 0.2));
     S.currency = Math.max(0, S.currency - fine);
-    renderSpecial(); toast(`❌ ¡Droga equivocada! El cliente se pira. -${fmt(fine)} 💵`, '😬', 'toast-bad');
+    animateEndEvent('.banyo-event', false, renderSpecial); toast(`❌ ¡Droga equivocada! El cliente se pira. -${fmt(fine)} 💵`, '😬', 'toast-bad');
     showMsg('Le diste lo que no quería. Negocio roto. Reputación por los suelos.');
     updateDisplays();
   }
@@ -2285,7 +2304,7 @@ function triggerRaices() {
       S.achData.raicesCaptures = (S.achData.raicesCaptures || 0) + 1;
       S.achData.policeCaptures = (S.achData.policeCaptures || 0) + 1;
       S.currency = 0;
-      renderSpecial();
+      animateEndEvent('.raices-event', false, renderSpecial);
       toast('Te quedaste parado. ¡Pillado y desplumado!', '🚔', 'toast-bad');
       showMsg('No elegiste y la guardia te encontró. Pasta confiscada. Distribución cortada 15 segundos.');
       updateDisplays();
@@ -2302,7 +2321,7 @@ function clickRaices(routeId) {
     const reward = 60 + Math.floor(Math.random() * 80);
     earn(reward);
     S.achData.raicesEscapes = (S.achData.raicesEscapes || 0) + 1;
-    renderSpecial();
+    animateEndEvent('.raices-event', true, renderSpecial);
     toast(`${route.icon} ¡${route.name} despejado! +${reward} pasta 💸`, '✅', 'toast-good');
     showMsg(`${route.name} estaba libre. Conoces el terreno mejor que ellos.`);
     updateDisplays();
@@ -2311,7 +2330,7 @@ function clickRaices(routeId) {
     S.achData.raicesCaptures = (S.achData.raicesCaptures || 0) + 1;
     S.achData.policeCaptures = (S.achData.policeCaptures || 0) + 1;
     S.currency = 0;
-    renderSpecial();
+    animateEndEvent('.raices-event', false, renderSpecial);
     toast(`🚔 Control en ${route.icon} ${route.name}. ¡Pasta confiscada!`, '😬', 'toast-bad');
     showMsg(`${route.name} tenía control esta noche. Te han vaciado los bolsillos. 15 segundos fuera de juego.`);
     updateDisplays();
@@ -2328,7 +2347,7 @@ function triggerPolice() {
     if (S.policeActive) {
       const fine = Math.max(100, Math.floor(S.currency * 0.4));
       S.currency = Math.max(0, S.currency - fine); S.policeActive = false; S.achData.policeCaptures++;
-      renderSpecial(); toast(`¡Pillado! Multa de ${fmt(fine)} 💵`, '👮');
+      animateEndEvent('.police-event', false, renderSpecial); toast(`¡Pillado! Multa de ${fmt(fine)} 💵`, '👮');
       showMsg('Te han pillado con el género. La próxima vez corre más.'); updateDisplays();
     }
   }, 10000);
@@ -2341,7 +2360,7 @@ function clickPolice() {
     clearTimeout(S.policeTimer); S.policeActive = false;
     const b = Math.max(50, Math.floor(S.currency * 0.2));
     S.currency += b; S.totalCurrency += b; S.achData.policeEscapes++;
-    renderSpecial(); toast(`¡Escapado! Adrenalina: +${fmt(b)} 💵`, '🏃');
+    animateEndEvent('.police-event', true, renderSpecial); toast(`¡Escapado! Adrenalina: +${fmt(b)} 💵`, '🏃');
     showMsg('La adrenalina es parte del negocio. Nanduko escapa de nuevo.'); updateDisplays();
   } else { renderSpecial(); }
 }
@@ -2394,7 +2413,7 @@ function triggerLimpiarVasos() {
   clearTimeout(S.vasosTimer);
   S.vasosTimer = setTimeout(() => {
     if (S.vasosActive) {
-      S.vasosActive = false; renderSpecial();
+      S.vasosActive = false; animateEndEvent('.vasos-event', false, renderSpecial);
       toast('Los vasos se han quedado ahí. El contenedor gana.', '🗑️');
       showMsg('Nadie los limpió. Siguen ahí, en todo su esplendor asqueroso.');
     }
@@ -2409,7 +2428,7 @@ function clickVaso() {
     S.achData.vasosLimpiados = (S.achData.vasosLimpiados || 0) + 1;
     const reward = 80 + Math.floor(Math.random() * 80);
     earn(reward);
-    renderSpecial();
+    animateEndEvent('.vasos-event', true, renderSpecial);
     toast(`¡Vasos limpios! +${reward} Caos 🧼`, '✨');
     showMsg('Manos en remojo, pero el Caos sube. Dignidad: -10. Puntos: +' + reward + '.');
   } else {
@@ -2426,7 +2445,7 @@ function triggerRoca() {
   clearTimeout(S.rocaTimer);
   S.rocaTimer = setTimeout(() => {
     if (S.rocaActive) {
-      S.rocaActive = false; renderSpecial();
+      S.rocaActive = false; animateEndEvent('.roca-event', false, renderSpecial);
       toast('Roca Pintada ha tocado su set completo. Horror sonoro.', '🎶');
       showMsg('Roca Pintada se ha salido con la suya. Que Dios nos pille confesados.');
     }
@@ -2442,7 +2461,7 @@ function clickRoca() {
     const ch = CHARS[S.pid];
     const b  = Math.max(200, Math.floor(S.currency * 0.4));
     S.currency += b; S.totalCurrency += b;
-    renderSpecial();
+    animateEndEvent('.roca-event', true, renderSpecial);
     const msgs = ['¡Roca Pintada ha salido volando del escenario!','¡Roca Pintada ha cancelado su actuación indefinidamente!','¡El guitarrista de Roca Pintada pide perdón llorando!'];
     toast(`¡${msgs[Math.floor(Math.random()*msgs.length)]} +${fmt(b)} ${ch.icon}`, '🤜');
     showMsg('El festival aplaude. Roca Pintada promete no volver. Por ahora.');
@@ -2463,7 +2482,7 @@ function triggerSetas() {
       S.setasActive = false;
       S.setasDebuffEnd = Date.now() + 8000;
       S.achData.setasSobredosis = (S.achData.setasSobredosis || 0) + 1;
-      renderSpecial();
+      animateEndEvent('.setas-event', false, renderSpecial);
       toast('🤯 ¡SOBREDOSIS DE SETAS! Producción a 0 por 8 segundos.', '💀', 'toast-bad');
       showMsg('La barra se pasó. Sobredosis masiva. El festival lo nota. ×0 durante 8s.');
       updateDisplays();
@@ -2484,13 +2503,13 @@ function clickSetasParar() {
     const bonus = Math.max(200, Math.floor(S.currency * 0.35));
     earn(bonus);
     S.setasBuffEnd = Date.now() + 12000;
-    renderSpecial();
+    animateEndEvent('.setas-event', true, renderSpecial);
     toast(`🍄 ¡Batidiño perfecto! +${fmt(bonus)} Caos ×2 durante 12s`, '🌟', 'toast-good');
     showMsg('El tío está encantado. Todo el festival quiere uno. ×2 activo 12s.');
   } else if (pct < 50) {
     const fine = Math.max(50, Math.floor(S.currency * 0.15));
     S.currency = Math.max(0, S.currency - fine);
-    renderSpecial();
+    animateEndEvent('.setas-event', false, renderSpecial);
     toast(`❌ ¡Demasiado pronto! Batido a medias. -${fmt(fine)} Caos`, '😬', 'toast-bad');
     showMsg('No había batido lo suficiente. El cliente lo escupe.');
   }
@@ -2506,7 +2525,7 @@ function triggerCorteLuz() {
     if (S.corteLuzActive) {
       S.corteLuzActive = false;
       S.corteLuzDebuffEnd = Date.now() + 8000;
-      renderSpecial();
+      animateEndEvent('.corte-luz-event', false, renderSpecial);
       toast('💀 Sin luz. Producción a 0 durante 8s. Roca Pintada aplaude.', '🌑', 'toast-bad');
     }
   }, 5000);
@@ -2518,7 +2537,7 @@ function clickRestaurarLuz() {
   S.corteLuzActive = false;
   S.achData.cortesRestaurados = (S.achData.cortesRestaurados || 0) + 1;
   S.corteLuzBuffEnd = Date.now() + 12000;
-  renderSpecial();
+  animateEndEvent('.corte-luz-event', true, renderSpecial);
   toast('💡 ¡LUZ RESTAURADA! ×2 durante 12s — el técnico llora de alegría', '💡', 'toast-good');
 }
 
@@ -2526,6 +2545,7 @@ function clickRestaurarLuz() {
 //  RENDER SPECIAL AREA
 // ================================================================
 function renderSpecial() {
+  if (_animatingEvent) return;
   const area = document.getElementById('special-area');
   if (!area || !S.pid) return;
   const ch = CHARS[S.pid];

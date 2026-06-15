@@ -1408,6 +1408,31 @@ body::before {
 .ach-finish-btn:active { transform: scale(.96); }
 
 /* ============================================================
+   EVENT EXIT ANIMATIONS
+   ============================================================ */
+@keyframes event-exit-good {
+  0%   { transform: scale(1);    opacity: 1; box-shadow: none; }
+  25%  { transform: scale(1.04); box-shadow: 0 0 28px rgba(68,255,136,0.75), inset 0 0 16px rgba(68,255,136,0.2); }
+  100% { transform: scale(0.93) translateY(-18px); opacity: 0; }
+}
+@keyframes event-exit-bad {
+  0%   { transform: translateX(0);   opacity: 1; }
+  18%  { transform: translateX(-10px); box-shadow: 0 0 22px rgba(255,60,60,0.7); }
+  36%  { transform: translateX(10px); }
+  54%  { transform: translateX(-6px); opacity: 0.6; }
+  72%  { transform: translateX(4px);  opacity: 0.3; }
+  100% { transform: translateX(0) scale(0.94); opacity: 0; }
+}
+.event-exit-good {
+  animation: event-exit-good 0.36s ease-out forwards !important;
+  pointer-events: none;
+}
+.event-exit-bad {
+  animation: event-exit-bad 0.36s ease-in forwards !important;
+  pointer-events: none;
+}
+
+/* ============================================================
    FIREWORKS
    ============================================================ */
 .firework-spark {
@@ -1993,6 +2018,16 @@ body::before {
   border-radius: 50%;
   object-fit: cover;
   filter: blur(0.8px) grayscale(20%);
+  z-index: 0;
+  user-select: none;
+  will-change: left, top;
+}
+.game-floater-xp {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+  object-fit: cover;
+  filter: blur(0.3px) saturate(1.4);
   z-index: 0;
   user-select: none;
   will-change: left, top;
