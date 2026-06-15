@@ -1357,10 +1357,12 @@ body::before {
   display: flex; justify-content: space-between; align-items: center;
   padding: 1rem 1.2rem;
   border-bottom: 1px solid var(--border);
-  font-size: 1rem; font-weight: 800; color: var(--gold);
+  font-family: 'Lilita One', 'Nunito', sans-serif;
+  font-size: 1rem; font-weight: 400; color: var(--gold);
 }
 .ach-header button {
   background: var(--card2); border: 1px solid var(--border);
+  font-family: 'Nunito', sans-serif;
   color: var(--dim); width: 30px; height: 30px;
   border-radius: 8px; cursor: pointer; font-size: 0.9rem;
 }
@@ -1377,9 +1379,9 @@ body::before {
 .ach-item.unlocked { border-color: var(--gold); background: rgba(255,217,61,0.05); }
 .ach-icon { font-size: 1.6rem; flex-shrink: 0; width: 36px; text-align: center; }
 .ach-info { flex: 1; min-width: 0; }
-.ach-name { font-size: 0.88rem; font-weight: 700; margin-bottom: 0.15rem; }
+.ach-name { font-family: 'Lilita One', 'Nunito', sans-serif; font-size: 0.88rem; font-weight: 400; margin-bottom: 0.15rem; }
 .ach-name.locked-name { color: var(--dim); }
-.ach-desc { font-size: 0.74rem; color: var(--dim); line-height: 1.3; }
+.ach-desc { font-family: 'Nunito', sans-serif; font-size: 0.74rem; color: var(--dim); line-height: 1.3; }
 .ach-check { font-size: 1rem; flex-shrink: 0; }
 
 .ach-complete-footer {
@@ -1709,14 +1711,15 @@ body::before {
 .tut-skip {
   position: absolute; top: 0.75rem; right: 0.9rem;
   background: none; border: none;
+  font-family: 'Nunito', sans-serif;
   color: rgba(255,255,255,.4); font-size: 1rem;
   cursor: pointer; padding: 0.2rem 0.4rem;
 }
 .tut-skip:hover { color: rgba(255,255,255,.8); }
 #tut-body { min-height: 130px; }
 .tut-icon { font-size: 3.2rem; margin-bottom: 0.75rem; display: block; }
-.tut-title { font-size: 1.15rem; font-weight: 900; margin-bottom: 0.5rem; }
-.tut-desc { font-size: 0.82rem; opacity: 0.75; line-height: 1.55; }
+.tut-title { font-family: 'Lilita One', 'Nunito', sans-serif; font-size: 1.15rem; font-weight: 400; margin-bottom: 0.5rem; }
+.tut-desc { font-family: 'Nunito', sans-serif; font-size: 0.82rem; opacity: 0.75; line-height: 1.55; }
 .tut-fade { opacity: 0; transition: opacity .18s; }
 .tut-dots { display: flex; justify-content: center; gap: 7px; margin: 1.25rem 0 1rem; }
 .tut-dot {
@@ -1729,7 +1732,8 @@ body::before {
   width: 100%; padding: 0.75rem;
   background: var(--theme); color: #000;
   border: none; border-radius: 12px;
-  font-weight: 900; font-size: 0.95rem;
+  font-family: 'Lilita One', 'Nunito', sans-serif;
+  font-weight: 400; font-size: 0.95rem;
   cursor: pointer; transition: opacity .15s;
 }
 .tut-btn:active { opacity: .8; }

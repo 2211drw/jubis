@@ -798,6 +798,7 @@ function renderSelection() {
 let tickId = null, msgId = null, tickN = 0;
 
 function startGame(pid) {
+  stopFireworks();
   localStorage.removeItem(`penona_${pid}_new`);
   const ch   = CHARS[pid];
   const save = loadSave(pid);
@@ -3383,7 +3384,8 @@ function renderAchievements() {
   const done    = achs.filter(a => S.achievements[a.id]).length;
   document.querySelector('.ach-header span').textContent = `🏆 Logros (${done}/${total})`;
   if (done === total && total > 0) {
-    launchFireworks();
+    const allDone = allCharactersCompleted();
+    if (allDone) launchFireworks();
     const footer = document.createElement('div');
     footer.className = 'ach-complete-footer';
     footer.innerHTML = `
@@ -3396,6 +3398,7 @@ function renderAchievements() {
 
 function finishAndExit() {
   toggleAchievements();
+  saveGame();
   stopGame();
   [S.chicaTimer, S.ahogadoTimer, S.idealistaTimer, S.olaTimer, S.interrumpidorTimer, S.policeTimer, S.rocaTimer, S.fightTimer, S.banyoTimer, S.raicesTimer, S.coopersTimer, S.diarreaTimer, S.papaTimer, S.molinilloTimer, S.setasTimer, S.corteLuzTimer].forEach(t => clearTimeout(t));
   document.getElementById('coopers-slot').style.display = 'none';
@@ -3406,8 +3409,10 @@ function finishAndExit() {
   document.getElementById('selection-screen').classList.remove('hidden');
   renderSelection();
   setTheme({ theme:'#ffe899', themeD:'#e8c840', themeG:'rgba(255,232,153,0.28)' });
-  launchFireworks();
-  document.getElementById('congrats-overlay').classList.remove('hidden');
+  if (allCharactersCompleted()) {
+    launchFireworks();
+    document.getElementById('congrats-overlay').classList.remove('hidden');
+  }
 }
 
 // ================================================================
@@ -3477,6 +3482,14 @@ function saveGame() {
 
 function loadSave(pid) {
   try { return JSON.parse(localStorage.getItem(`penona_${pid}`)); } catch(_) { return null; }
+}
+
+function allCharactersCompleted() {
+  return UNLOCK_ORDER.every(pid => {
+    const save = loadSave(pid);
+    if (!save || !save.achievements) return false;
+    return (ACHIEVEMENTS[pid] || []).every(a => save.achievements[a.id]);
+  });
 }
 
 // ── TUTORIAL ─────────────────────────────────────────────────────────────────
