@@ -1571,16 +1571,25 @@ function startHold(type) {
     if (holdType === 'ola') {
       const surfFill = document.querySelector('.surf-fill');
       if (surfFill) surfFill.style.width = holdProgress + '%';
-      // Reveal direction at 60%
+      // Reveal direction at 60% — update DOM in-place, NO renderSpecial (would detach touch target)
       if (holdProgress >= 60 && !S.olaRevealed) {
         S.olaRevealed = true;
-        renderSpecial();
         const txt = document.querySelector('.ola-reveal-txt');
         if (txt) {
           txt.textContent = S.olaDir === 'derecha' ? '¡ES UNA DERECHA! ¡DALE DALE!' : '¡ES UNA IZQUIERDA!';
           txt.style.color = S.olaDir === 'derecha' ? '#44ff88' : '#ff3300';
           txt.style.fontWeight = '900';
           txt.style.fontSize = '1rem';
+        }
+        const hint = document.querySelector('.hold-hint');
+        if (hint) hint.textContent = S.olaDir === 'izquierda' ? '¡SUELTA! ¡Para!' : '¡Aguanta!';
+        const arrows = document.querySelectorAll('.ola-side-arrow');
+        const arrow = S.olaDir === 'derecha' ? '➡️' : '⬅️';
+        arrows.forEach(a => a.textContent = arrow);
+        const olaCard = document.querySelector('.ola-event');
+        if (olaCard) {
+          olaCard.classList.remove('ola-misterio', 'ola-derecha', 'ola-izquierda');
+          olaCard.classList.add(S.olaDir === 'derecha' ? 'ola-derecha' : 'ola-izquierda');
         }
         if (S.olaDir === 'izquierda' && surfFill) {
           surfFill.style.background = 'linear-gradient(90deg,#990000,#cc2200,#ff4400)';
@@ -1613,8 +1622,18 @@ function stopHold(success) {
     if (t === 'ola')   resolveOla();
   } else {
     const t = holdType;
+    const wasRevealed = S.olaRevealed;
+    const wasIzquierda = S.olaDir === 'izquierda';
     holdProgress = 0; holdType = null;
     if (t === 'ola') {
+      if (wasRevealed && wasIzquierda) {
+        // Released on a revealed left wave = correct action (same as letting timer expire)
+        clearTimeout(S.olaTimer);
+        S.olaActive = false; S.olaDir = null; S.olaRevealed = false;
+        animateEndEvent('.ola-event', true, renderSpecial);
+        toast('🌊 Bien hecho, era una izquierda. La dejaste pasar.', '🌊', 'toast-good');
+        return;
+      }
       S.olaRevealed = false;
       toast('🌊 Ola perdida. No aguantaste hasta el final.', '🌊', 'toast-bad');
     } else if (holdProgress > 5) {
