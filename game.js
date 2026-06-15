@@ -351,7 +351,7 @@ const ACHIEVEMENTS = {
     { id:'barril_inf',     icon:'🛢️', name:'El Barril Sin Fondo',   desc:'5000 cañas. El médico ya dejó de advertirte.',                               cond: s => s.totalCurrency >= 5000 },
     { id:'dardos_king',    icon:'🎯', name:'Campeón de los Dardos', desc:'Tablero instalado. Rafa el Facha lleva aquí 4 horas y no pierde.',            cond: s => (s.upgrades.dardos||0) >= 1 },
     { id:'maquina',        icon:'🎰', name:'Mi religión: LA TRAGAPA',desc:'Tragaperras instalada. El jubilado de la esquina ya no come.',                cond: s => (s.upgrades.maquina||0) >= 1 },
-    { id:'madrugador',     icon:'🌅', name:'El Primero del Bar',    desc:'3 minutos seguidos detrás de la barra. Sin moverse ni para mear.',           cond: s => (s.achData.timeSec||0) >= 180 },
+    { id:'madrugador',     icon:'🌅', name:'El Primero del Bar',    desc:'2 minutos seguidos detrás de la barra. Sin moverse ni para mear.',           cond: s => (s.achData.timeSec||0) >= 120 },
     { id:'verdugo_bar',    icon:'🧟', name:'El Verdugo del Bar',    desc:'10 peleas ganadas. El seguro ya no te cubre. Ni la familia.',                 cond: s => (s.achData.fightWins||0) >= 10 },
     { id:'institucion',    icon:'🏆', name:'Institución del Barrio',desc:'50000 cañas. El bar es tuyo. Y el olor también.',                             cond: s => s.totalCurrency >= 50000 },
   ],
@@ -1321,6 +1321,12 @@ function updateDisplays() {
   if (S.pid === 'weeman4k') {
     const ring = document.getElementById('coopers-ring');
     if (ring) ring.style.background = `conic-gradient(var(--theme) ${(S.coopersPct||0) * 3.6}deg, rgba(255,255,255,.12) 0deg)`;
+  }
+  const trophyBtn = document.querySelector('.trophy-btn');
+  if (trophyBtn) {
+    const list = ACHIEVEMENTS[S.pid] || [];
+    const allDone = list.length > 0 && list.every(a => S.achievements[a.id]);
+    trophyBtn.classList.toggle('trophy-btn--complete', allDone);
   }
 }
 
@@ -3377,6 +3383,8 @@ function checkAchievements() {
       const nextCh = CHARS[nextPid];
       toast(`🔓 ¡${nextCh.name} DESBLOQUEADO! Vuelve al menú.`, '🎉', 'toast-good');
     }
+    const trophyBtn = document.querySelector('.trophy-btn');
+    if (trophyBtn) trophyBtn.classList.add('trophy-btn--complete');
   }
 }
 
